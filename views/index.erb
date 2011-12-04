@@ -1,0 +1,48 @@
+<html>
+
+<head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script src="/js/socket.io.js"></script>
+</head>
+
+<body>
+  <h1>Output...</h1>
+  <div id="output"></div>
+
+  <script>
+    // Set up class variables
+    var socket = null;
+    var timer = null;
+
+    // Set up our socket and listener
+    function setUpSocket()
+    {
+      socket = io.connect('ws://localhost:8080');
+      socket.on('connect', function(data){
+        console.log('connected');
+        setUpTimer();
+      });
+      socket.on('message', function(data){
+        $('#output').html(data);
+      });
+
+      console.log('connecting...');
+    }
+
+    // Set up a timer to ping the server every second
+    function setUpTimer()
+    {
+      timer = setInterval(function() {
+        socket.send('ping');
+      }, 1000);
+    }
+
+    // Orchestrate all this stuff on page load
+    $(document).ready(function() {
+      setUpSocket();
+    });
+  </script>
+</body>
+
+</html>
+
