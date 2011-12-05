@@ -1,7 +1,7 @@
 <html>
 
 <head>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
   <script src="/js/socket.io.js"></script>
   <style type="text/css">
     label, span { width: 9em; }
@@ -42,26 +42,23 @@
         // Private methods
         _setup: function()
         {
-          // Connect
-          console.log('Connecting...');
-          var Socket            = "MozWebSocket" in window ? MozWebSocket : WebSocket;
-          obj.websocket         = new Socket("ws://localhost:8080/");
-          obj.websocket.onclose = function() { console.log("socket closed"); };
-          obj.websocket.onopen  = function() {
-            console.log("connected");
+          // Set up timer
+          function updateDrift()
+          {
+            $.ajax({
+              url: '/time',
+              success: function(data) {
+                var serverTime = parseFloat(data);
+                if (!serverTime) return;
+                var clientTime = (new Date).getTime();
+                var drift      = clientTime - serverTime;
+                obj.samples.push(drift);
 
-            // Set up timer
-            timer = setInterval(function() {
-              obj.websocket.send('t'); // Get time
-            }, 500);
-          };
-          obj.websocket.onmessage = function(evt) {
-            var serverTime = parseFloat(evt.data);
-            if (!serverTime) return;
-            var clientTime = (new Date).getTime();
-            var drift      = clientTime - serverTime;
-            obj.samples.push(drift);
+                setTimeout(updateDrift, 300);
+              }
+            });
           }
+          updateDrift();
 
           return obj;
         }
@@ -72,12 +69,13 @@
 
     function setUpMetronome()
     {
-      var timer = getTimer();
+      var timer    = getTimer();
+      window.timer = timer;
 
       setInterval(function () {
         var clientTime   = (new Date).getTime();
         var averageDrift = timer.getAverageDrift();
-        var serverTime   = clientTime + averageDrift;
+        var serverTime   = clientTime - averageDrift;
         $('#clientTime').html(clientTime);
         $('#averageDrift').html(averageDrift);
         $('#serverTime').html(serverTime);
