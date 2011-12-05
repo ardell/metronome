@@ -14,10 +14,10 @@ EventMachine.run do
     end
   end
 
-  EventMachine::WebSocket.start(:host => "127.0.0.1", :port => 8080, :debug => true) do |ws|
+  EventMachine::WebSocket.start(:host => "localhost", :port => 8080, :debug => true) do |ws|
     ws.onopen    { ws.send "Hello Client!" }
     ws.onclose   { puts "WebSocket closed" }
-    ws.onmessage { |msg| ws.send "Pong: #{msg}"     }
+    ws.onmessage { |msg| ws.send Time.now.to_f * 1000     }
     ws.onerror   { |e|   puts "Error: #{e.message}" }
   end
 

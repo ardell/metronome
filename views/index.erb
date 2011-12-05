@@ -3,43 +3,98 @@
 <head>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
   <script src="/js/socket.io.js"></script>
+  <style type="text/css">
+    label, span { width: 9em; }
+  </style>
 </head>
 
 <body>
-  <h1>Output...</h1>
-  <div id="output"></div>
+  <p>
+    <label>Client time:</label>
+    <span id="clientTime"></span>
+  </p>
+
+  <p>
+    <label>Average drift:</label>
+    <span id="averageDrift"></span>
+  </p>
+
+  <p>
+    <label>Server time:</label>
+    <span id="serverTime"></span>
+  </p>
 
   <script>
-    // Set up class variables
-    var socket = null;
-    var timer = null;
+    var getTimer = function() {
+      var obj = {
+        samples:   [],
+        websocket: null,
 
-    // Set up our socket and listener
-    function setUpSocket()
+        // Public methods
+        getAverageDrift: function()
+        {
+          if (obj.samples.length < 1) return 0;
+          if (obj.samples.length == 1) return obj.samples.slice(0, 1);
+          var totalDrift = obj.samples.reduce(function(a, b) { return a + b; });
+          return totalDrift / obj.samples.length;
+        },
+
+        // Private methods
+        _setup: function()
+        {
+          // Connect
+          console.log('Connecting...');
+          var Socket            = "MozWebSocket" in window ? MozWebSocket : WebSocket;
+          obj.websocket         = new Socket("ws://localhost:8080/");
+          obj.websocket.onclose = function() { console.log("socket closed"); };
+          obj.websocket.onopen  = function() {
+            console.log("connected");
+
+            // Set up timer
+            timer = setInterval(function() {
+              obj.websocket.send('t'); // Get time
+            }, 500);
+          };
+          obj.websocket.onmessage = function(evt) {
+            var serverTime = parseFloat(evt.data);
+            if (!serverTime) return;
+            var clientTime = (new Date).getTime();
+            var drift      = clientTime - serverTime;
+            obj.samples.push(drift);
+          }
+
+          return obj;
+        }
+      };
+
+      return obj._setup();
+    };
+
+    function setUpMetronome()
     {
-      socket = io.connect('ws://localhost:8080');
-      socket.on('connect', function(data){
-        console.log('connected');
-        setUpTimer();
-      });
-      socket.on('message', function(data){
-        $('#output').html(data);
-      });
+      var timer = getTimer();
 
-      console.log('connecting...');
-    }
+      setInterval(function () {
+        var clientTime   = (new Date).getTime();
+        var averageDrift = timer.getAverageDrift();
+        var serverTime   = clientTime + averageDrift;
+        $('#clientTime').html(clientTime);
+        $('#averageDrift').html(averageDrift);
+        $('#serverTime').html(serverTime);
 
-    // Set up a timer to ping the server every second
-    function setUpTimer()
-    {
-      timer = setInterval(function() {
-        socket.send('ping');
-      }, 1000);
+        // If we're the first half of the second, background black, otherwise white
+        if (serverTime % 1000 < 500)
+        {
+          $('body').css('background-color', '#ddd');
+        } else {
+          $('body').css('background-color', '#fff');
+        }
+      }, 17);
     }
 
     // Orchestrate all this stuff on page load
     $(document).ready(function() {
-      setUpSocket();
+      setUpMetronome();
     });
   </script>
 </body>
