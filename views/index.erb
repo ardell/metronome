@@ -1,6 +1,11 @@
 <html>
 
 <head>
+  <script>
+    // Set up some timing stuff
+    var clientTime = (new Date).getTime() / 1000.0;
+    var serverTime = <%= Time.now.to_f.to_s %>;
+  </script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
   <script src="/js/socket.io.js"></script>
   <style type="text/css">
@@ -38,12 +43,11 @@
 
   <script>
     function getOffset() {
-      var serverTime     = <%= Time.now.to_f.to_s %>;
-      var clientTime     = (new Date).getTime() / 1000.0;
-      var requestStart   = performance.timing.requestStart / 1000.0;
-      var domInteractive = performance.timing.domInteractive / 1000.0;
-      var loadDelay      = domInteractive - requestStart;
-      return clientTime - serverTime - loadDelay;
+      return clientTime - serverTime;
+      // var requestStart   = performance.timing.requestStart / 1000.0;
+      // var domInteractive = performance.timing.domInteractive / 1000.0;
+      // var loadDelay      = domInteractive - requestStart;
+      // return clientTime - serverTime - loadDelay;
     }
 
     // Orchestrate all this stuff on page load
