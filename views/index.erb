@@ -1,17 +1,11 @@
 <html>
 
 <head>
-  <script>
-    // Set up some timing stuff
-    var clientTime = (new Date).getTime() / 1000.0;
-    var serverTime = <%= Time.now.to_f.to_s %>;
-  </script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
-  <script src="/js/socket.io.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.js"></script>
   <style type="text/css">
     label, span { width: 9em; }
     #count { font-size: 72pt; }
-    #no-performance-api { display: none; }
+    #beat { font-size: 800%; }
   </style>
 </head>
 
@@ -20,11 +14,6 @@
     <embed id="a880" src="/sounds/a_880.mp3" autostart=false width=44 height=44 enablejavascript="true" />
     <embed id="a440" src="/sounds/a_440.mp3" autostart=false width=44 height=44 enablejavascript="true" />
   %>
-
-  <p class="error" id="no-performance-api">
-    Error: this browser does not support the javascript `performance.timing`
-    API.
-  </p>
 
   <p>
     <label>Offset:</label>
@@ -42,54 +31,71 @@
   </p>
 
   <script>
-    function getOffset() {
-      return clientTime - serverTime;
-      // var requestStart   = performance.timing.requestStart / 1000.0;
-      // var domInteractive = performance.timing.domInteractive / 1000.0;
-      // var loadDelay      = domInteractive - requestStart;
-      // return clientTime - serverTime - loadDelay;
-    }
-
     // Orchestrate all this stuff on page load
     $(document).ready(function() {
       // Retrieve these from the server
-      var tempo           = 96.0; // beats per minute
+      var tempo           = 66.0; // beats per minute
       var beatsPerMeasure = 4;
       var startTime       = <%= Time.parse('2014-01-01 12:00:00 UTC').to_f.to_s %> // in UTC with milliseconds
 
-      if (!window.performance || !window.performance.timing) {
-        $('#no-performance-api').show();
-      }
-
       // Set up the offset
-      var offset = getOffset();
-      $('#offset').text(offset);
+      var offset = 0.0;
+      var requestStartTime = (new Date).getTime() / 1000.0;
+      $.ajax({ url: '/time' })
+        .done(function(data) {
+          var serverTime        = parseFloat(data);
+          var responseEndTime   = (new Date).getTime() / 1000.0;
+          var responseStartTime = (responseEndTime + requestStartTime) / 2.0;
+          offset                = responseStartTime - serverTime;
+        })
+        .then(function() { 
+          $('#offset').text(offset);
+        })
+        .then(function() {
+          // Display changing serverTime to the user
+          function getServerTime() {
+            return (new Date).getTime() / 1000.0 + offset;
+          };
+          setInterval(function() {
+            $('#serverTime').text(getServerTime(offset));
+          }, 30);
 
-      // Display changing serverTime to the user
-      function getServerTime() {
-        return (new Date).getTime() / 1000.0 + offset;
-      };
-      setInterval(function() {
-        $('#serverTime').text(getServerTime(offset));
-      }, 30);
+          // Display beat to the user
+          function getBeatsSinceStart() {
+            var timeDiffInSeconds = getServerTime() - startTime;
+            // how many beats in timeDiffInSeconds:
+            // ====================================
+            // n seconds   1 minute     96 beats   m beats
+            //           * --------   * -------- = 
+            //             60 seconds   1 minute
+            var beats = timeDiffInSeconds / 60.0 * tempo;
+            return beats;
+          };
+          function getBeat() {
+            return Math.round(getBeatsSinceStart()) % beatsPerMeasure + 1;
+          };
+          setInterval(function() {
+            var beat = getBeat();
+            $('#beat').text(beat);
 
-      // Display beat to the user
-      function getBeatsSinceStart() {
-        var timeDiffInSeconds = getServerTime() - startTime;
-        // how many beats in timeDiffInSeconds:
-        // ====================================
-        // n seconds   1 minute     96 beats   m beats
-        //           * --------   * -------- = 
-        //             60 seconds   1 minute
-        var beats = timeDiffInSeconds / 60.0 * tempo;
-        return beats;
-      };
-      function getBeat() {
-        return Math.round(getBeatsSinceStart()) % beatsPerMeasure + 1;
-      };
-      setInterval(function() {
-        $('#beat').text(getBeat());
-      }, 30);
+            // Change background
+            switch(beat) {
+              case 1:
+                $('body').css({ backgroundColor: 'red' });
+                break;
+              case 2:
+                $('body').css({ backgroundColor: 'orange' });
+                break;
+              case 3:
+                $('body').css({ backgroundColor: 'yellow' });
+                break;
+              case 4:
+                $('body').css({ backgroundColor: 'white' });
+                break;
+            }
+          }, 30);
+        })
+        ;
     });
   </script>
 </body>

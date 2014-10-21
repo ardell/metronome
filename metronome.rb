@@ -11,3 +11,4 @@ end
 get '/time' do
   return Time.now.to_f.to_s
 end
+
