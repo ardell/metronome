@@ -9,5 +9,5 @@ get '/' do
 end
 
 get '/time' do
-  return (Time.now.to_f * 1000).to_s
+  return Time.now.to_f.to_s
 end
