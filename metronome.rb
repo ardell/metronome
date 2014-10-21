@@ -9,6 +9,8 @@ get '/' do
 end
 
 get '/time' do
-  return Time.now.to_f.to_s
+  client = params[:client].to_f
+  server = Time.now.to_f
+  return (client - server).to_s
 end
 
