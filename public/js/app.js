@@ -1,7 +1,7 @@
  // Retrieve these from the server
  var tempo           = 66.0; // beats per minute
  var beatsPerMeasure = 4;
- var startTime       = <%= Time.parse('2014-01-01 12:00:00 UTC').to_f.to_s %> // in UTC with milliseconds
+ var startTime       = new Date('2014-01-01 12:00:00 UTC').getTime() / 1000.0;
 
  // Orchestrate all this stuff on page load
  var offset = null;
