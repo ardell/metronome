@@ -1,0 +1,22 @@
+/***
+ * Index page (/)
+ ***/
+
+#index-page label,
+#index-page span {
+  width: 9em;
+}
+
+#index-page #count {
+  font-size: 72pt;
+}
+
+#index-page #beat {
+  font-size: 800%;
+}
+
+#index-page th,
+#index-page td {
+  width: 200px; border: 1px solid #ddd;
+}
+
