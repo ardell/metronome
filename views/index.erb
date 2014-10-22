@@ -11,11 +11,6 @@
 </head>
 
 <body>
-  <%#
-    <embed id="a880" src="/sounds/a_880.mp3" autostart=false width=44 height=44 enablejavascript="true" />
-    <embed id="a440" src="/sounds/a_440.mp3" autostart=false width=44 height=44 enablejavascript="true" />
-  %>
-
   <table>
     <tr>
       <th></th>
@@ -44,7 +39,10 @@
     <span id="beat"></span>
   </p>
 
-  <p><button id="sync">Sync</button></p>
+  <p>
+    <button id="sync">Sync</button>
+    <button id="play">Play</button>
+  </p>
 
   <script>
     // Retrieve these from the server
@@ -99,10 +97,25 @@
     function getBeat() {
       return Math.round(getBeatsSinceStart()) % beatsPerMeasure + 1;
     };
+    var lastBeat = 0;
     setInterval(function() {
       if (!offset) return;
 
       var beat = getBeat();
+
+      // Make appropriate tick sound
+      if (beat != lastBeat) {
+        switch(beat) {
+          case 1:
+            $(window).trigger('tick:high');
+            break;
+          default:
+            $(window).trigger('tick:low');
+        };
+        lastBeat = beat;
+      }
+
+      // Show beat indicator
       $('#beat').text(beat);
 
       // Change background
@@ -127,6 +140,48 @@
       // Set up sync button
       $('#sync').on('click tap', setUp);
     });
+    function loadSounds() {
+      if('webkitAudioContext' in window) {
+        var context = new (window.AudioContext || window.webkitAudioContext);
+
+        // 10 hz (mute/unmute)
+        mutedTick = function() {
+          var muted = context.createOscillator();
+          muted.frequency.value = 10;
+          muted.connect(context.destination);
+          if (muted.noteOn) muted.start = muted.noteOn;
+          if (muted.noteOff) muted.stop = muted.noteOff;
+          muted.start(0);
+          setTimeout(function() { muted.stop(0); }, 80);
+        }
+        $(document).on('click tap touchstart', mutedTick);
+
+        // 440 hz
+        highTick = function() {
+          var high = context.createOscillator();
+          high.frequency.value = 660;
+          high.connect(context.destination);
+          if (high.noteOn) high.start = high.noteOn;
+          if (high.noteOff) high.stop = high.noteOff;
+          high.start(0);
+          setTimeout(function() { high.stop(0); }, 80);
+        }
+        $(window).on('tick:high', highTick);
+
+        // 220 hz
+        lowTick = function() {
+          var low = context.createOscillator();
+          low.frequency.value = 330;
+          low.connect(context.destination);
+          if (low.noteOn) low.start = low.noteOn;
+          if (low.noteOff) low.stop = low.noteOff;
+          low.start(0);
+          setTimeout(function() { low.stop(0); }, 80);
+        }
+        $(window).on('tick:low', lowTick);
+      }
+    };
+    $(document).ready(loadSounds);
   </script>
 </body>
 
