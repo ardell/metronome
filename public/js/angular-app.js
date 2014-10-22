@@ -1,7 +1,89 @@
 var app = angular.module('metronome', []);
 
-app.controller('IndexController', function ($scope) {
-  // Retrieve these from the server
+function median(values) {
+  values.sort(function(a,b) { return a - b; });
+  var middle = Math.floor(values.length/2);
+  if (values.length % 2) {
+    return values[middle];
+  } else {
+    return (values[middle-1] + values[middle]) / 2.0;
+  }
+}
+
+app.factory('WebSocketFactory', function($q) {
+  return {
+    create: function(uri) {
+      var deferred = $q.defer();
+      var ws       = null;
+
+      ws         = new WebSocket(uri);
+      ws.onopen  = function() { deferred.resolve(ws); }
+      ws.onerror = function() { deferred.reject(ws);  }
+
+      return deferred.promise;
+    }
+  };
+}, ['$q']);
+
+app.factory('TimeSynchronizationFactory', function(WebSocketFactory, $q) {
+  return {
+    getOffset: function() {
+      var uri = "ws://" + window.document.location.host + "/time";
+      var ws  = WebSocketFactory.create(uri);
+
+      var deferred = $q.defer();
+      ws.then(
+        function(connection) {  // success
+          // Send N pings in a row and take the median offset
+          var MEASUREMENTS     = 10;
+          var results          = [];
+          var requestStartTime = null;
+
+          function sendPing() {
+            requestStartTime = (new Date).getTime() / 1000.0;
+            connection.send(requestStartTime);
+          };
+          connection.onmessage = function(message) {
+            data = $.parseJSON(message.data);
+            var serverReportedOffset   = data.offset;
+            var requestEndTime         = (new Date).getTime() / 1000.0;
+            var clientCalculatedOffset = data.time - requestEndTime;
+            offset = (serverReportedOffset + clientCalculatedOffset) / 2;
+            results.push(offset);
+
+            if (results.length < MEASUREMENTS) {
+              sendPing();
+            } else {
+              connection.close();
+              var offset = median(results);
+              deferred.resolve(offset);
+            }
+          };
+          sendPing();
+        }, 
+        function() {  // error
+          deferred.reject('Error: could not connect to sync service.');
+          ws.close();
+        } 
+      );
+      return deferred.promise;
+    }
+  };
+}, ['WebSocketFactory', '$q']);
+
+app.controller('IndexController', function ($scope, TimeSynchronizationFactory) {
+  // Sync time via websocket service (and return a promise that will resolve to offset when time is sufficiently accurate)
+  var syncResult = TimeSynchronizationFactory.getOffset();
+  syncResult.then(function(val) { $scope.offset = val; });
+
+  // Query server for tempo, time sig, and start time via websockets (and set up handlers for when new data comes through)
+  syncResult.then(function(offset) {
+    // debugger;
+  });
+
+  // Set up a watch such that when tempo/time sig/start time change, they are sent to the server via websocket
+
+  // TODO: Retrieve these from the server
   var tempo           = 66.0; // beats per minute
   var beatsPerMeasure = 4;
   var startTime       = new Date('2014-01-01 12:00:00 UTC').getTime() / 1000.0;
@@ -135,5 +217,5 @@ app.controller('IndexController', function ($scope) {
     }
   };
   loadSounds();
-});
+}, ['TimeSynchronizationFactory']);
 
