@@ -6,6 +6,7 @@
     label, span { width: 9em; }
     #count { font-size: 72pt; }
     #beat { font-size: 800%; }
+    th, td { width: 200px; border: 1px solid #ddd;}
   </style>
 </head>
 
@@ -15,14 +16,27 @@
     <embed id="a440" src="/sounds/a_440.mp3" autostart=false width=44 height=44 enablejavascript="true" />
   %>
 
+  <table>
+    <tr>
+      <th></th>
+      <th>Time</th>
+      <th>Offset</th>
+    </tr>
+    <tr>
+      <td>Server</td>
+      <td id="server-time"></td>
+      <td id="server-reported-offset"></td>
+    </tr>
+    <tr>
+      <td>Client</td>
+      <td id="client-time"></td>
+      <td id="client-calculated-offset"></td>
+    </tr>
+  </table>
+
   <p>
     <label>Offset:</label>
     <span id="offset"></span>
-  </p>
-
-  <p>
-    <label>Server time:</label>
-    <span id="serverTime"></span>
   </p>
 
   <p>
@@ -49,9 +63,15 @@
           data: { client: requestStartTime }
         })
         .done(function(data) {
-          offset = parseFloat(data);
+          var serverReportedOffset   = data.offset;
+          var requestEndTime         = (new Date).getTime() / 1000.0;
+          var clientCalculatedOffset = data.time - requestEndTime;
+          offset = (serverReportedOffset + clientCalculatedOffset) / 2;
+          $('#server-reported-offset').text(serverReportedOffset);
+          $('#client-calculated-offset').text(clientCalculatedOffset);
           $('#offset').text(offset);
         })
+        ;
     }
 
     // Display changing serverTime to the user
@@ -60,7 +80,8 @@
     };
     setInterval(function() {
       if (!offset) return;
-      $('#serverTime').text(getServerTime(offset));
+      $('#client-time').text((new Date).getTime() / 1000.0);
+      $('#server-time').text(getServerTime(offset));
     }, 30);
 
     // Display beat to the user
