@@ -1,6 +1,7 @@
 source "http://rubygems.org"
+ruby "2.1.2"
 
-gem 'em-websocket'
+gem 'puma'
 gem 'sinatra'
-gem 'thin'
+gem "faye-websocket"
 

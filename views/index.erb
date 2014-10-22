@@ -57,21 +57,22 @@
     function setUp() {
       // Set up the offset
       var requestStartTime = (new Date).getTime() / 1000.0;
-      $
-        .ajax({
-          url: '/time',
-          data: { client: requestStartTime }
-        })
-        .done(function(data) {
-          var serverReportedOffset   = data.offset;
-          var requestEndTime         = (new Date).getTime() / 1000.0;
-          var clientCalculatedOffset = data.time - requestEndTime;
-          offset = (serverReportedOffset + clientCalculatedOffset) / 2;
-          $('#server-reported-offset').text(serverReportedOffset);
-          $('#client-calculated-offset').text(clientCalculatedOffset);
-          $('#offset').text(offset);
-        })
-        ;
+      var uri = "ws://" + window.document.location.host + "/time";
+      window.ws = new WebSocket(uri);
+      window.ws.onopen = function() {
+        var requestStartTime = (new Date).getTime() / 1000.0;
+        ws.send(requestStartTime);
+      };
+      window.ws.onmessage = function(message) {
+        data = $.parseJSON(message.data);
+        var serverReportedOffset   = data.offset;
+        var requestEndTime         = (new Date).getTime() / 1000.0;
+        var clientCalculatedOffset = data.time - requestEndTime;
+        offset = (serverReportedOffset + clientCalculatedOffset) / 2;
+        $('#server-reported-offset').text(serverReportedOffset);
+        $('#client-calculated-offset').text(clientCalculatedOffset);
+        $('#offset').text(offset);
+      };
     }
 
     // Display changing serverTime to the user
