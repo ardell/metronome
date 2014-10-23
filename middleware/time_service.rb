@@ -3,7 +3,7 @@ require 'faye/websocket'
 require 'json'
 
 module Metronome
-  class Websockets
+  class TimeService
     KEEPALIVE_TIME = 15 # in seconds
 
     def initialize(app)
@@ -11,11 +11,21 @@ module Metronome
     end
 
     def call(env)
-      return @app.call(env) unless Faye::WebSocket.websocket?(env)
+      if !Faye::WebSocket.websocket?(env) or env['PATH_INFO'] != '/time'
+        return @app.call(env) 
+      end
 
+      _time(env)
+    end
+
+    private
+
+    def _time(env)
       ws = Faye::WebSocket.new(env, nil, {ping: KEEPALIVE_TIME })
+
       ws.on :open do |event|
       end
+
       ws.on :message do |event|
         client = event.data.to_f
         server = Time.now.to_f
@@ -27,6 +37,7 @@ module Metronome
         }
         ws.send obj.to_json
       end
+
       ws.on :close do |event|
       end
 
@@ -35,4 +46,5 @@ module Metronome
     end
   end
 end
+
 

@@ -12,13 +12,15 @@ function median(values) {
 
 app.factory('WebSocketFactory', function($q) {
   return {
-    create: function(uri) {
+    create: function(hash) {
+      var uri      = hash.uri;
       var deferred = $q.defer();
       var ws       = null;
 
       ws         = new WebSocket(uri);
       ws.onopen  = function() { deferred.resolve(ws); }
       ws.onerror = function() { deferred.reject(ws);  }
+      if ('onmessage' in hash) ws.onmessage = hash.onmessage;
 
       return deferred.promise;
     }
@@ -29,7 +31,7 @@ app.factory('TimeSynchronizationFactory', function(WebSocketFactory, $q) {
   return {
     getOffset: function() {
       var uri = "ws://" + window.document.location.host + "/time";
-      var ws  = WebSocketFactory.create(uri);
+      var ws  = WebSocketFactory.create({ uri: uri });
 
       var deferred = $q.defer();
       ws.then(
@@ -71,14 +73,29 @@ app.factory('TimeSynchronizationFactory', function(WebSocketFactory, $q) {
   };
 }, ['WebSocketFactory', '$q']);
 
-app.controller('IndexController', function ($scope, TimeSynchronizationFactory) {
+app.controller('IndexController', function ($scope, TimeSynchronizationFactory, WebSocketFactory) {
   // Sync time via websocket service (and return a promise that will resolve to offset when time is sufficiently accurate)
   var syncResult = TimeSynchronizationFactory.getOffset();
   syncResult.then(function(val) { $scope.offset = val; });
 
   // Query server for tempo, time sig, and start time via websockets (and set up handlers for when new data comes through)
+  $scope.beatsPerMinute  = null;
+  $scope.beatsPerMeasure = null;
+  $scope.startTime       = new Date().getTime() / 1000.0;
   syncResult.then(function(offset) {
-    // debugger;
+    var slug = 'phoenix';
+    var uri  = "ws://" + window.document.location.host + "/info";
+    var ws   = WebSocketFactory.create({
+      uri:       uri,
+      onmessage: function(message) {
+        data = $.parseJSON(message.data);
+        $scope.$apply(function() {
+          $scope.beatsPerMinute  = data.beatsPerMinute;
+          $scope.beatsPerMeasure = data.beatsPerMeasure;
+          $scope.startTime       = data.startTime;
+        });
+      }
+    });
   });
 
   // Set up a watch such that when tempo/time sig/start time change, they are sent to the server via websocket
@@ -217,5 +234,5 @@ app.controller('IndexController', function ($scope, TimeSynchronizationFactory) 
     }
   };
   loadSounds();
-}, ['TimeSynchronizationFactory']);
+}, ['TimeSynchronizationFactory', 'WebSocketFactory']);
 
