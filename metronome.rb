@@ -10,6 +10,11 @@ module Metronome
     get '/' do
       erb :index
     end
+
+    get '/:slug' do
+      puts params.inspect
+      erb :show
+    end
   end
 end
 

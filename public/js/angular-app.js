@@ -116,7 +116,16 @@ function getBeat(offset, startTime, beatsPerMinute, beatsPerMeasure) {
   return Math.round(getBeatsSinceStart(offset, startTime, beatsPerMinute)) % beatsPerMeasure + 1;
 };
 
-app.controller('IndexController', function ($scope, $interval, $q, TimeSynchronizationFactory, WebSocketFactory, ToneFactory) {
+app.controller('IndexController', function($scope) {
+  $scope.slug = "";
+  $scope.url = function() {
+    if (!$scope.slug) return null;
+    var sanitizedSlug = $scope.slug.trim().toLowerCase().replace(/[^a-z\-]+/, '-');
+    return "http://" + window.location.host + "/" + sanitizedSlug;
+  };
+}, []);
+
+app.controller('ShowController', function($scope, $interval, $q, TimeSynchronizationFactory, WebSocketFactory, ToneFactory) {
   // Sync time via websocket service (and return a promise that will resolve to offset when time is sufficiently accurate)
   var syncResult = TimeSynchronizationFactory.getOffset();
   syncResult.then(function(val) { $scope.offset = val; });
@@ -128,9 +137,9 @@ app.controller('IndexController', function ($scope, $interval, $q, TimeSynchroni
   var deferred           = $q.defer();
   var infoWebSocket      = deferred.promise;
   syncResult.then(function(offset) {
-    var slug      = 'phoenix';
-    var uri       = "ws://" + window.document.location.host + "/info?slug=" + slug;
-    var ws        = WebSocketFactory.create({
+    var slug = window.location.pathname.substring(1);
+    var uri  = "ws://" + window.document.location.host + "/info?slug=" + slug;
+    var ws   = WebSocketFactory.create({
       uri:       uri,
       onmessage: function(message) {
         data = $.parseJSON(message.data);

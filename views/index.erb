@@ -7,37 +7,16 @@
   <script src="/js/angular-app.js"></script>
 </head>
 
-<body id="index-page" ng-controller="IndexController" class="{{beatDisplayClass}}">
-  <p>
-    <label>Tempo:</label>
-    <select ng-model="beatsPerMinute" id="beatsPerMinute">
-      <option ng-repeat="option in tempoOptions" value="{{option}}" selected="{{option == beatsPerMinute}}">{{option}}</option>
-    </select> beats/minute
-  </p>
+<body ng-controller="IndexController">
+  <h1>Create a metronome</h1>
 
-  <p>
-    <label>Beats per measure:</label>
-    <span>{{beatsPerMeasure}}</span>
-  </p>
+  <div>
+    <label>What should we call your metronome?</label>
+    <input type="text" placeholder="john-smith" ng-model="slug" autofocus>
+  </div>
 
-  <p>
-    <label>Tempo last set at:</label>
-    <span>{{startTime}}</span>
-  </p>
-
-  <p>
-    <label>Offset:</label>
-    <span>{{offset}}</span>
-  </p>
-
-  <p>
-    <label>Beat:</label>
-    <span id="beat">{{beat}}</span>
-  </p>
-
-  <p>
-    <button id="sync">Sync</button>
-    <button id="play">Play</button>
+  <p ng-show="!!slug">
+    Your metronome is located at <a href="{{url()}}">{{url()}}</a>
   </p>
 </body>
 

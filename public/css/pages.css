@@ -2,26 +2,33 @@
  * Index page (/)
  ***/
 
-#index-page label,
-#index-page span {
+/* Nothing to see here. Move along. */
+
+
+/***
+ * Show page (/:slug)
+ ***/
+
+#show-page label,
+#show-page span {
   width: 9em;
 }
 
-#index-page #count {
+#show-page #count {
   font-size: 72pt;
 }
 
-#index-page #beat {
+#show-page #beat {
   font-size: 800%;
 }
 
-#index-page th,
-#index-page td {
+#show-page th,
+#show-page td {
   width: 200px; border: 1px solid #ddd;
 }
 
-body.beat-1 { background-color: red;    }
-body.beat-2 { background-color: orange; }
-body.beat-3 { background-color: yellow; }
-body.beat-4 { background-color: white;  }
+#show-page.beat-1 { background-color: red;    }
+#show-page.beat-2 { background-color: orange; }
+#show-page.beat-3 { background-color: yellow; }
+#show-page.beat-4 { background-color: white;  }
 
