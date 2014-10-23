@@ -67,7 +67,7 @@ module Metronome
         metronome = @metronomes[slug]
 
         # Add the client to the list of clients for this slug
-        puts "Connecting new client ##{ws.object_id} to metronome: '#{slug}'."
+        puts "Connecting client ##{ws.object_id} to metronome: '#{slug}'."
         metronome.clients << ws
 
         # Send the current info to the client
@@ -102,8 +102,11 @@ module Metronome
       end
 
       ws.on :close do |event|
-        @metronomes.each do |metronome|
-          metronome.clients.delete(ws) if metronome.clients.include?(ws)
+        @metronomes.each_pair do |slug, metronome|
+          if metronome.clients.include?(ws)
+            metronome.clients.delete(ws)
+            puts "Removing disconnected client ##{ws.object_id} from metronome: '#{slug}'."
+          end
         end
       end
 

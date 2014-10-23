@@ -12,7 +12,6 @@ module Metronome
     end
 
     get '/:slug' do
-      puts params.inspect
       erb :show
     end
   end
