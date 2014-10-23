@@ -7,17 +7,15 @@ module Metronome
     KEEPALIVE_TIME = 15 # in seconds
 
     def initialize(app)
-      @app     = app
-      @clients = []
+      @app            = app
+      @clients         = []
+      _set_up_info
 
       Thread.new do
         # Whenever the info changes in the db, update all clients
         while true do
-          obj = {
-            beatsPerMinute:  Random.rand(50..200),
-            beatsPerMeasure: 4,
-            startTime:       Time.now.to_f,
-          }
+          _set_up_info
+          obj = _info_as_hash
           @clients.each {|ws| ws.send obj.to_json }
 
           sleep 5
@@ -35,6 +33,20 @@ module Metronome
 
     private
 
+    def _set_up_info
+      @beatsPerMinute  = Random.rand(50..200)
+      @beatsPerMeasure = 4
+      @startTime       = Time.now.to_f
+    end
+
+    def _info_as_hash
+      return {
+        beatsPerMinute:  @beatsPerMinute,
+        beatsPerMeasure: @beatsPerMeasure,
+        startTime:       @startTime,
+      }
+    end
+
     def _info(env)
       ws = Faye::WebSocket.new(env, nil, {ping: KEEPALIVE_TIME })
 
@@ -43,12 +55,7 @@ module Metronome
         @clients << ws
 
         # Send the current info to the client
-        obj = {
-          beatsPerMinute:  Random.rand(50..200),
-          beatsPerMeasure: 4,
-          startTime:       Time.now.to_f,
-        }
-        ws.send obj.to_json
+        ws.send _info_as_hash.to_json
       end
 
       ws.on :message do |event|

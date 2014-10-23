@@ -98,63 +98,28 @@ app.controller('IndexController', function ($scope, TimeSynchronizationFactory, 
     });
   });
 
-  // Set up a watch such that when tempo/time sig/start time change, they are sent to the server via websocket
-
-  // TODO: Retrieve these from the server
-  var tempo           = 66.0; // beats per minute
-  var beatsPerMeasure = 4;
-  var startTime       = new Date('2014-01-01 12:00:00 UTC').getTime() / 1000.0;
-
-  // Orchestrate all this stuff on page load
-  var offset = null;
-  function setUp() {
-    // Set up the offset
-    var requestStartTime = (new Date).getTime() / 1000.0;
-    var uri = "ws://" + window.document.location.host + "/time";
-    window.ws = new WebSocket(uri);
-    window.ws.onopen = function() {
-      var requestStartTime = (new Date).getTime() / 1000.0;
-      ws.send(requestStartTime);
-    };
-    window.ws.onmessage = function(message) {
-      data = $.parseJSON(message.data);
-      var serverReportedOffset   = data.offset;
-      var requestEndTime         = (new Date).getTime() / 1000.0;
-      var clientCalculatedOffset = data.time - requestEndTime;
-      offset = (serverReportedOffset + clientCalculatedOffset) / 2;
-      $('#server-reported-offset').text(serverReportedOffset);
-      $('#client-calculated-offset').text(clientCalculatedOffset);
-      $('#offset').text(offset);
-    };
-  }
-
-  // Display changing serverTime to the user
-  function getServerTime() {
-    return (new Date).getTime() / 1000.0 + offset;
-  };
-  setInterval(function() {
-    if (!offset) return;
-    $('#client-time').text((new Date).getTime() / 1000.0);
-    $('#server-time').text(getServerTime(offset));
-  }, 30);
+  // TODO: Set up a watch such that when tempo/time sig/start time change, they are sent to the server via websocket
 
   // Display beat to the user
+  function getServerTime() {
+    return (new Date).getTime() / 1000.0 + $scope.offset;
+  };
   function getBeatsSinceStart() {
-    var timeDiffInSeconds = getServerTime() - startTime;
+    var timeDiffInSeconds = getServerTime() - $scope.startTime;
     // how many beats in timeDiffInSeconds:
     // ====================================
     // n seconds   1 minute     96 beats   m beats
     //           * --------   * -------- = 
     //             60 seconds   1 minute
-    var beats = timeDiffInSeconds / 60.0 * tempo;
+    var beats = timeDiffInSeconds / 60.0 * $scope.beatsPerMinute;
     return beats;
   };
   function getBeat() {
-    return Math.round(getBeatsSinceStart()) % beatsPerMeasure + 1;
+    return Math.round(getBeatsSinceStart()) % $scope.beatsPerMeasure + 1;
   };
   var lastBeat = 0;
   setInterval(function() {
-    if (!offset) return;
+    if (!$scope.offset) return;
 
     var beat = getBeat();
 
@@ -190,8 +155,6 @@ app.controller('IndexController', function ($scope, TimeSynchronizationFactory, 
     }
   }, 30);
 
-  setUp();
-  $('#sync').on('click tap', setUp);
   function loadSounds() {
     if('webkitAudioContext' in window) {
       var context = new (window.AudioContext || window.webkitAudioContext);
