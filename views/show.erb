@@ -8,32 +8,38 @@
 </head>
 
 <body id="show-page" ng-controller="ShowController" class="{{beatDisplayClass}}">
-  <p>
-    <label>Tempo:</label>
-    <select ng-model="beatsPerMinute" id="beatsPerMinute">
-      <option ng-repeat="option in tempoOptions" value="{{option}}" selected="{{option == beatsPerMinute}}">{{option}}</option>
-    </select> beats/minute
-  </p>
+  <div ng-show="offset">
+    <p>
+      <label>Tempo:</label>
+      <select ng-model="beatsPerMinute" id="beatsPerMinute">
+        <option ng-repeat="option in tempoOptions" value="{{option}}" selected="{{option == beatsPerMinute}}">{{option}}</option>
+      </select> beats/minute
+    </p>
 
-  <p>
-    <label>Beats per measure:</label>
-    <span>{{beatsPerMeasure}}</span>
-  </p>
+    <p>
+      <label>Beats per measure:</label>
+      <span>{{beatsPerMeasure}}</span>
+    </p>
 
-  <p>
-    <label>Tempo last set at:</label>
-    <span>{{startTime}}</span>
-  </p>
+    <p>
+      <label>Tempo last set at:</label>
+      <span>{{startTime}}</span>
+    </p>
 
-  <p>
-    <label>Offset:</label>
-    <span>{{offset}}</span>
-  </p>
+    <p>
+      <label>Offset:</label>
+      <span>{{offset}}</span>
+    </p>
 
-  <p>
-    <label>Beat:</label>
-    <span id="beat">{{beat}}</span>
-  </p>
+    <p>
+      <label>Beat:</label>
+      <span id="beat">{{beat}}</span>
+    </p>
+  </div> <!-- ng-show="offset" -->
+
+  <div ng-hide="offset">
+    Loading...
+  </div>
 </body>
 
 </html>
