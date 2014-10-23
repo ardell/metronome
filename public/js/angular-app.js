@@ -73,6 +73,32 @@ app.factory('TimeSynchronizationFactory', function(WebSocketFactory, $q) {
   };
 }, ['WebSocketFactory', '$q']);
 
+app.factory('ToneFactory', function($timeout) {
+  return {
+    create: function() {
+      if(!'webkitAudioContext' in window) {
+        console.warn("Browser doesn't support the HTML5 Audio API.");
+        return {
+          play: function(frequencyInHz, durationInMs) {}
+        };
+      }
+
+      return {
+        context: new (window.AudioContext || window.webkitAudioContext),
+        play:    function(frequencyInHz, durationInMs) {
+          var oscillator = this.context.createOscillator();
+          oscillator.frequency.value = frequencyInHz;
+          oscillator.connect(this.context.destination);
+          if (oscillator.noteOn) oscillator.start = oscillator.noteOn;
+          if (oscillator.noteOff) oscillator.stop = oscillator.noteOff;
+          oscillator.start(this.context.currentTime);
+          oscillator.stop(this.context.currentTime + durationInMs/1000.0);
+        }
+      };
+    }
+  };
+}, ['$timeout']);
+
 function getServerTime(offset) {
   return (new Date).getTime() / 1000.0 + offset;
 };
@@ -90,7 +116,7 @@ function getBeat(offset, startTime, beatsPerMinute, beatsPerMeasure) {
   return Math.round(getBeatsSinceStart(offset, startTime, beatsPerMinute)) % beatsPerMeasure + 1;
 };
 
-app.controller('IndexController', function ($scope, $interval, TimeSynchronizationFactory, WebSocketFactory) {
+app.controller('IndexController', function ($scope, $interval, TimeSynchronizationFactory, WebSocketFactory, ToneFactory) {
   // Sync time via websocket service (and return a promise that will resolve to offset when time is sufficiently accurate)
   var syncResult = TimeSynchronizationFactory.getOffset();
   syncResult.then(function(val) { $scope.offset = val; });
@@ -133,7 +159,7 @@ app.controller('IndexController', function ($scope, $interval, TimeSynchronizati
 
   // When beat changes, play a sound
   $scope.$watch('beat', function() {
-    switch(beat) {
+    switch($scope.beat) {
       case 1:
         $(window).trigger('tick:high');
         break;
@@ -143,46 +169,20 @@ app.controller('IndexController', function ($scope, $interval, TimeSynchronizati
   });
 
   function loadSounds() {
-    if('webkitAudioContext' in window) {
-      var context = new (window.AudioContext || window.webkitAudioContext);
+    var toneFactory = ToneFactory.create();
 
-      // 10 hz (mute/unmute)
-      mutedTick = function() {
-        var muted = context.createOscillator();
-        muted.frequency.value = 10;
-        muted.connect(context.destination);
-        if (muted.noteOn) muted.start = muted.noteOn;
-        if (muted.noteOff) muted.stop = muted.noteOff;
-        muted.start(0);
-        setTimeout(function() { muted.stop(0); }, 80);
-      }
-      $(document).on('click tap touchstart', mutedTick);
+    // Dummy sound: 10hz for 1ms (basically imperceptible)
+    mutedTick = function() { toneFactory.play(10, 1); }
+    $(document).on('click tap touchstart', mutedTick);
 
-      // 440 hz
-      highTick = function() {
-        var high = context.createOscillator();
-        high.frequency.value = 660;
-        high.connect(context.destination);
-        if (high.noteOn) high.start = high.noteOn;
-        if (high.noteOff) high.stop = high.noteOff;
-        high.start(0);
-        setTimeout(function() { high.stop(0); }, 80);
-      }
-      $(window).on('tick:high', highTick);
+    // High tick
+    highTick = function() { toneFactory.play(660, 80); }
+    $(window).on('tick:high', highTick);
 
-      // 220 hz
-      lowTick = function() {
-        var low = context.createOscillator();
-        low.frequency.value = 330;
-        low.connect(context.destination);
-        if (low.noteOn) low.start = low.noteOn;
-        if (low.noteOff) low.stop = low.noteOff;
-        low.start(0);
-        setTimeout(function() { low.stop(0); }, 80);
-      }
-      $(window).on('tick:low', lowTick);
-    }
+    // Low tick
+    lowTick = function() { toneFactory.play(330, 80); }
+    $(window).on('tick:low', lowTick);
   };
   loadSounds();
-}, ['$interval', 'TimeSynchronizationFactory', 'WebSocketFactory']);
+}, ['$interval', 'TimeSynchronizationFactory', 'WebSocketFactory', 'ToneFactory']);
 
