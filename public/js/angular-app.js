@@ -73,7 +73,24 @@ app.factory('TimeSynchronizationFactory', function(WebSocketFactory, $q) {
   };
 }, ['WebSocketFactory', '$q']);
 
-app.controller('IndexController', function ($scope, TimeSynchronizationFactory, WebSocketFactory) {
+function getServerTime(offset) {
+  return (new Date).getTime() / 1000.0 + offset;
+};
+function getBeatsSinceStart(offset, startTime, beatsPerMinute) {
+  var timeDiffInSeconds = getServerTime(offset) - startTime;
+  // how many beats in timeDiffInSeconds:
+  // ====================================
+  // n seconds   1 minute     96 beats   m beats
+  //           * --------   * -------- = 
+  //             60 seconds   1 minute
+  var beats = timeDiffInSeconds / 60.0 * beatsPerMinute;
+  return beats;
+};
+function getBeat(offset, startTime, beatsPerMinute, beatsPerMeasure) {
+  return Math.round(getBeatsSinceStart(offset, startTime, beatsPerMinute)) % beatsPerMeasure + 1;
+};
+
+app.controller('IndexController', function ($scope, $interval, TimeSynchronizationFactory, WebSocketFactory) {
   // Sync time via websocket service (and return a promise that will resolve to offset when time is sufficiently accurate)
   var syncResult = TimeSynchronizationFactory.getOffset();
   syncResult.then(function(val) { $scope.offset = val; });
@@ -101,59 +118,29 @@ app.controller('IndexController', function ($scope, TimeSynchronizationFactory, 
   // TODO: Set up a watch such that when tempo/time sig/start time change, they are sent to the server via websocket
 
   // Display beat to the user
-  function getServerTime() {
-    return (new Date).getTime() / 1000.0 + $scope.offset;
-  };
-  function getBeatsSinceStart() {
-    var timeDiffInSeconds = getServerTime() - $scope.startTime;
-    // how many beats in timeDiffInSeconds:
-    // ====================================
-    // n seconds   1 minute     96 beats   m beats
-    //           * --------   * -------- = 
-    //             60 seconds   1 minute
-    var beats = timeDiffInSeconds / 60.0 * $scope.beatsPerMinute;
-    return beats;
-  };
-  function getBeat() {
-    return Math.round(getBeatsSinceStart()) % $scope.beatsPerMeasure + 1;
-  };
-  var lastBeat = 0;
-  setInterval(function() {
-    if (!$scope.offset) return;
+  $scope.beat             = null;
+  $scope.beatDisplayClass = null;
+  $interval(function() {
+    if (!$scope.offset || !$scope.startTime || !$scope.beatsPerMinute || !$scope.beatsPerMeasure) return;
+    $scope.beat = getBeat(
+      $scope.offset,
+      $scope.startTime,
+      $scope.beatsPerMinute,
+      $scope.beatsPerMeasure
+    );
+    $scope.beatDisplayClass = "beat-" + $scope.beat;
+  }, 30);
 
-    var beat = getBeat();
-
-    // Make appropriate tick sound
-    if (beat != lastBeat) {
-      switch(beat) {
-        case 1:
-          $(window).trigger('tick:high');
-          break;
-        default:
-          $(window).trigger('tick:low');
-      };
-      lastBeat = beat;
-    }
-
-    // Show beat indicator
-    $('#beat').text(beat);
-
-    // Change background
+  // When beat changes, play a sound
+  $scope.$watch('beat', function() {
     switch(beat) {
       case 1:
-        $('body').css({ backgroundColor: 'red' });
+        $(window).trigger('tick:high');
         break;
-      case 2:
-        $('body').css({ backgroundColor: 'orange' });
-        break;
-      case 3:
-        $('body').css({ backgroundColor: 'yellow' });
-        break;
-      case 4:
-        $('body').css({ backgroundColor: 'white' });
-        break;
-    }
-  }, 30);
+      default:
+        $(window).trigger('tick:low');
+    };
+  });
 
   function loadSounds() {
     if('webkitAudioContext' in window) {
@@ -197,5 +184,5 @@ app.controller('IndexController', function ($scope, TimeSynchronizationFactory, 
     }
   };
   loadSounds();
-}, ['TimeSynchronizationFactory', 'WebSocketFactory']);
+}, ['$interval', 'TimeSynchronizationFactory', 'WebSocketFactory']);
 

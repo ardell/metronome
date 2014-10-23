@@ -7,7 +7,7 @@
   <script src="/js/angular-app.js"></script>
 </head>
 
-<body id="index-page" ng-controller="IndexController">
+<body id="index-page" ng-controller="IndexController" class="{{beatDisplayClass}}">
   <p>
     <label>Tempo:</label>
     <span>{{beatsPerMinute}} beats/minute</span>
@@ -30,7 +30,7 @@
 
   <p>
     <label>Beat:</label>
-    <span id="beat"></span>
+    <span id="beat">{{beat}}</span>
   </p>
 
   <p>
