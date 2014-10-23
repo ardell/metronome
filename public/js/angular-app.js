@@ -116,7 +116,7 @@ function getBeat(offset, startTime, beatsPerMinute, beatsPerMeasure) {
   return Math.round(getBeatsSinceStart(offset, startTime, beatsPerMinute)) % beatsPerMeasure + 1;
 };
 
-app.controller('IndexController', function ($scope, $interval, TimeSynchronizationFactory, WebSocketFactory, ToneFactory) {
+app.controller('IndexController', function ($scope, $interval, $q, TimeSynchronizationFactory, WebSocketFactory, ToneFactory) {
   // Sync time via websocket service (and return a promise that will resolve to offset when time is sufficiently accurate)
   var syncResult = TimeSynchronizationFactory.getOffset();
   syncResult.then(function(val) { $scope.offset = val; });
@@ -125,10 +125,12 @@ app.controller('IndexController', function ($scope, $interval, TimeSynchronizati
   $scope.beatsPerMinute  = null;
   $scope.beatsPerMeasure = null;
   $scope.startTime       = new Date().getTime() / 1000.0;
+  var deferred           = $q.defer();
+  var infoWebSocket      = deferred.promise;
   syncResult.then(function(offset) {
-    var slug = 'phoenix';
-    var uri  = "ws://" + window.document.location.host + "/info";
-    var ws   = WebSocketFactory.create({
+    var slug      = 'phoenix';
+    var uri       = "ws://" + window.document.location.host + "/info?slug=" + slug;
+    var ws        = WebSocketFactory.create({
       uri:       uri,
       onmessage: function(message) {
         data = $.parseJSON(message.data);
@@ -139,9 +141,24 @@ app.controller('IndexController', function ($scope, $interval, TimeSynchronizati
         });
       }
     });
+    ws.then(function() { deferred.resolve(ws); });
   });
 
-  // TODO: Set up a watch such that when tempo/time sig/start time change, they are sent to the server via websocket
+  // Set up tempo options
+  $scope.tempoOptions = [];
+  for (var i=50; i <= 200; i++) $scope.tempoOptions.push(i);
+
+  // Set up a watch such that when tempo/time sig/start time change, they are sent to the server via websocket
+  infoWebSocket.then(function(ws) {
+    $('#beatsPerMinute').on('change', function() {
+      console.log("user changed beatsPerMinute to " + $('#beatsPerMinute').val() + " at " + (new Date()));
+      ws.send(JSON.stringify({
+        beatsPerMinute:  $('#beatsPerMinute').val(),
+        beatsPerMeasure: 4,
+        startTime:       getServerTime($scope.offset)
+      }));
+    });
+  });
 
   // Display beat to the user
   $scope.beat             = null;
@@ -184,5 +201,5 @@ app.controller('IndexController', function ($scope, $interval, TimeSynchronizati
     $(window).on('tick:low', lowTick);
   };
   loadSounds();
-}, ['$interval', 'TimeSynchronizationFactory', 'WebSocketFactory', 'ToneFactory']);
+}, ['$interval', '$q', 'TimeSynchronizationFactory', 'WebSocketFactory', 'ToneFactory']);
 

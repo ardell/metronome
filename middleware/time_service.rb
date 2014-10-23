@@ -1,5 +1,4 @@
 require 'faye/websocket'
-# require 'redis'
 require 'json'
 
 module Metronome

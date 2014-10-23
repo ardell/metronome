@@ -10,7 +10,9 @@
 <body id="index-page" ng-controller="IndexController" class="{{beatDisplayClass}}">
   <p>
     <label>Tempo:</label>
-    <span>{{beatsPerMinute}} beats/minute</span>
+    <select ng-model="beatsPerMinute" id="beatsPerMinute">
+      <option ng-repeat="option in tempoOptions" value="{{option}}" selected="{{option == beatsPerMinute}}">{{option}}</option>
+    </select> beats/minute
   </p>
 
   <p>
