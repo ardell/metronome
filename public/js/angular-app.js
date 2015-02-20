@@ -226,6 +226,10 @@ app.controller('ShowController', function($scope, $interval, $q, TimeSynchroniza
   function loadSounds() {
     var toneFactory = ToneFactory.create();
 
+    // Mute on blur, unmute on focus
+    $(window).on('blur',  function() { window.MUTED = true; });
+    $(window).on('focus', function() { window.MUTED = false; });
+
     // Dummy sound: 10hz for 1ms (basically imperceptible)
     mutedTick = function() {
       if (window.MUTED) return;
