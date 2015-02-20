@@ -196,17 +196,27 @@ app.controller('ShowController', function($scope, $interval, $q, TimeSynchroniza
 
   function loadSounds() {
     var toneFactory = ToneFactory.create();
+    window.MUTED = true;
 
     // Dummy sound: 10hz for 1ms (basically imperceptible)
-    mutedTick = function() { toneFactory.play(10, 1); }
+    mutedTick = function() {
+      if (window.MUTED) return;
+      toneFactory.play(10, 1);
+    }
     $(document).on('click tap touchstart', mutedTick);
 
     // High tick
-    highTick = function() { toneFactory.play(660, 80); }
+    highTick = function() {
+      if (window.MUTED) return;
+      toneFactory.play(660, 80);
+    }
     $(window).on('tick:high', highTick);
 
     // Low tick
-    lowTick = function() { toneFactory.play(330, 80); }
+    lowTick = function() {
+      if (window.MUTED) return;
+      toneFactory.play(330, 80);
+    }
     $(window).on('tick:low', lowTick);
   };
   loadSounds();
