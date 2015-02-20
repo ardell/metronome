@@ -64,6 +64,8 @@ body {
 }
 
 #show-page #tap-control #tap-button {
+  display: block;
+  text-decoration: none;
   background-color: #444;
   height: 100%;
   line-height: 155pt;
@@ -87,7 +89,15 @@ body {
        -o-transition-timing-function: linear;
           transition-timing-function: linear;
 }
-#show-page #tap-control #tap-button:active {
+html.no-touch #show-page #tap-control #tap-button:active {
+  background-color: #666666;
+  color: #444444;
+  -webkit-transition-duration: 0s;
+     -moz-transition-duration: 0s;
+       -o-transition-duration: 0s;
+          transition-duration: 0s;
+}
+html.touch #show-page #tap-control #tap-button.active {
   background-color: #666666;
   color: #444444;
   -webkit-transition-duration: 0s;

@@ -181,8 +181,13 @@ app.controller('ShowController', function($scope, $interval, $q, TimeSynchroniza
     recentTaps.splice(0, recentTaps.length);
   }, 3000);
   var eventType = 'click';
-  if (Modernizr.touch) eventType = 'touchstart'
-  $('#tap-button').on(eventType, function() {
+  if (Modernizr.touch) eventType = 'touchstart';
+  var button = $('#tap-button');
+  button.on(eventType, function() {
+    // Manage active class (using only :active makes the button flicker on mobile)
+    button.addClass('active');
+    setTimeout(function() { button.removeClass('active'); }, 100);
+
     recentTaps.push(new Date());
     setTempo();
     cleanUp();
