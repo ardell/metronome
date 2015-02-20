@@ -176,21 +176,27 @@ app.controller('ShowController', function($scope, $interval, $q, TimeSynchroniza
       $(window).trigger('tempo:change');
     });
   };
-  var cleanUp = _.debounce(function() {
-    // Clear the array of recent taps
+  var clearTaps = _.debounce(function() {
     recentTaps.splice(0, recentTaps.length);
   }, 3000);
+  var queueUnMute = _.debounce(function() {
+    window.MUTED = false;
+  }, 1000);
   var eventType = 'click';
   if (Modernizr.touch) eventType = 'touchstart';
   var button = $('#tap-button');
   button.on(eventType, function() {
+    // Mute while we're tapping
+    window.MUTED = true;
+
     // Manage active class (using only :active makes the button flicker on mobile)
     button.addClass('active');
     setTimeout(function() { button.removeClass('active'); }, 100);
 
     recentTaps.push(new Date());
     setTempo();
-    cleanUp();
+    clearTaps();
+    queueUnMute();
   });
 
   // Set up a watch such that when tempo/time sig/start time change, they are sent to the server via websocket
