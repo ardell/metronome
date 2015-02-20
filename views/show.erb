@@ -1,13 +1,6 @@
 <div id="show-page" ng-controller="ShowController" class="{{beatDisplayClass}}">
   <div ng-show="offset">
     <p>
-      <label>Tempo:</label>
-      <select ng-model="beatsPerMinute" id="beatsPerMinute">
-        <option ng-repeat="option in tempoOptions" value="{{option}}" selected="{{option == beatsPerMinute}}">{{option}}</option>
-      </select> beats/minute
-    </p>
-
-    <p>
       <label>Beats per measure:</label>
       <span>{{beatsPerMeasure}}</span>
     </p>
@@ -28,7 +21,7 @@
     </p>
 
     <div id="tap-control">
-      <div class="tempo">{{beatsPerMinute}}</div>
+      <div class="tempo">{{beatsPerMinute | number:1}}</div>
       <div id="tap-button">Tap</div>
     </div>
   </div> <!-- ng-show="offset" -->

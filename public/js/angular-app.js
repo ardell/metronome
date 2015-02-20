@@ -153,18 +153,47 @@ app.controller('ShowController', function($scope, $interval, $q, TimeSynchroniza
     ws.then(function() { deferred.resolve(ws); });
   });
 
-  // Set up tempo options
-  $scope.tempoOptions = [];
-  for (var i=50; i <= 200; i++) $scope.tempoOptions.push(i);
+  var recentTaps = [];
+  var setTempo = function() {
+    $scope.$apply(function() {
+      if (recentTaps.length < 2) return;
+
+      // Set tempo
+      var calculateDiff = function(arr) {
+        // If there's <= 1 element in the array, throw
+        if (arr.length <= 1) throw new Exception("Can't compute differences.");
+
+        // If there are only 2 elements left, return array with diff
+        if (arr.length == 2) return [ arr[1]-arr[0] ];
+
+        // Otherwise return first result concatted with recursion
+        return [ arr[1]-arr[0] ].concat(calculateDiff(arr.slice(1, arr.length)));
+      };
+      var medianMsPerBeat   = _.median(calculateDiff(recentTaps));
+      var beatsPerMinute    = 60.0 / medianMsPerBeat * 1000.0;
+      $scope.beatsPerMinute = beatsPerMinute;
+      $scope.startTime      = _.min(recentTaps).getTime() / 1000.0;
+      $(window).trigger('tempo:change');
+    });
+  };
+  var cleanUp = _.debounce(function() {
+    // Clear the array of recent taps
+    recentTaps.splice(0, recentTaps.length);
+  }, 3000);
+  $('#tap-button').on('click tap', function() {
+    recentTaps.push(new Date());
+    setTempo();
+    cleanUp();
+  });
 
   // Set up a watch such that when tempo/time sig/start time change, they are sent to the server via websocket
   infoWebSocket.then(function(ws) {
-    $('#beatsPerMinute').on('change', function() {
-      console.log("user changed beatsPerMinute to " + $('#beatsPerMinute').val() + " at " + (new Date()));
+    $(window).on('tempo:change', function() {
+      console.log("user changed beatsPerMinute to " + $scope.beatsPerMinute + " at " + $scope.startTime);
       ws.send(JSON.stringify({
-        beatsPerMinute:  $('#beatsPerMinute').val(),
+        beatsPerMinute:  $scope.beatsPerMinute,
         beatsPerMeasure: 4,
-        startTime:       getServerTime($scope.offset)
+        startTime:       $scope.startTime
       }));
     });
   });
@@ -196,7 +225,6 @@ app.controller('ShowController', function($scope, $interval, $q, TimeSynchroniza
 
   function loadSounds() {
     var toneFactory = ToneFactory.create();
-    window.MUTED = true;
 
     // Dummy sound: 10hz for 1ms (basically imperceptible)
     mutedTick = function() {
