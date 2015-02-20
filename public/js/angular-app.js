@@ -180,7 +180,9 @@ app.controller('ShowController', function($scope, $interval, $q, TimeSynchroniza
     // Clear the array of recent taps
     recentTaps.splice(0, recentTaps.length);
   }, 3000);
-  $('#tap-button').on('click tap', function() {
+  var eventType = 'click';
+  if (Modernizr.touch) eventType = 'touchstart'
+  $('#tap-button').on(eventType, function() {
     recentTaps.push(new Date());
     setTempo();
     cleanUp();
