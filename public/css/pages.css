@@ -1,4 +1,13 @@
 /***
+ * All pages
+ ***/
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/***
  * Index page (/)
  ***/
 
@@ -8,6 +17,10 @@
 /***
  * Show page (/:slug)
  ***/
+
+#show-page {
+  height: 100%;
+}
 
 #show-page label,
 #show-page span {

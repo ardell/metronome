@@ -1,13 +1,4 @@
-<html ng-app="metronome">
-
-<head>
-  <link type="text/css" rel="stylesheet" href="/css/pages.css">
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.js"></script>
-  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
-  <script src="/js/angular-app.js"></script>
-</head>
-
-<body ng-controller="IndexController">
+<div ng-controller="IndexController">
   <h1>Create a metronome</h1>
 
   <div>
@@ -18,7 +9,5 @@
   <p ng-show="!!slug">
     Your metronome is located at <a href="{{url()}}">{{url()}}</a>
   </p>
-</body>
-
-</html>
+</div>
 

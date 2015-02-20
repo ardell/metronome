@@ -1,13 +1,4 @@
-<html ng-app="metronome">
-
-<head>
-  <link type="text/css" rel="stylesheet" href="/css/pages.css">
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.js"></script>
-  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
-  <script src="/js/angular-app.js"></script>
-</head>
-
-<body id="show-page" ng-controller="ShowController" class="{{beatDisplayClass}}">
+<div id="show-page" ng-controller="ShowController" class="{{beatDisplayClass}}">
   <div ng-show="offset">
     <p>
       <label>Tempo:</label>
@@ -40,7 +31,5 @@
   <div ng-hide="offset">
     Loading...
   </div>
-</body>
-
-</html>
+</div>
 
