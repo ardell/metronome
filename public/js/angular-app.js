@@ -284,13 +284,11 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   function loadSounds() {
     var toneFactory = ToneFactory.create();
 
-    // Mute on blur, unmute on focus
-    $(window).on('blur',  function() { window.MUTED = true; });
-    $(window).on('focus', function() { window.MUTED = false; });
-
     // Dummy sound: 10hz for 1ms (basically imperceptible)
     mutedTick = function() {
       if (window.MUTED) return;
+      if (!document.hasFocus()) return;
+      if (document.hidden) return;
       toneFactory.play(10, 1);
     }
     $(document).on('click tap touchstart', mutedTick);
@@ -298,6 +296,8 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     // High tick
     highTick = function() {
       if (window.MUTED) return;
+      if (!document.hasFocus()) return;
+      if (document.hidden) return;
       toneFactory.play(660, 80);
     }
     $(window).on('tick:high', highTick);
@@ -305,6 +305,8 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     // Low tick
     lowTick = function() {
       if (window.MUTED) return;
+      if (!document.hasFocus()) return;
+      if (document.hidden) return;
       toneFactory.play(330, 80);
     }
     $(window).on('tick:low', lowTick);
