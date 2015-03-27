@@ -320,6 +320,10 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
       $scope.beatDisplayClass = "beat-" + $scope.beat;
     });
   }, 10);
+  $scope.beatsPerMeasureDisplayClass = null;
+  $scope.$watch('beatsPerMeasure', function() {
+    $scope.beatsPerMeasureDisplayClass =  'beats-per-measure-' + $scope.beatsPerMeasure;
+  });
 
   // When beat changes, play a sound
   $scope.$watch('beat', function() {

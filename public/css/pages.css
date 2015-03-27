@@ -121,8 +121,11 @@ html.touch #show-page #tap-control #tap-button.active {
   top: 0;
 }
 #tap-wrapper .arc { visibility: hidden; }
-#tap-wrapper.beat-1 .beat-1-4 { visibility: visible; }
-#tap-wrapper.beat-2 .beat-2-4 { visibility: visible; }
-#tap-wrapper.beat-3 .beat-3-4 { visibility: visible; }
-#tap-wrapper.beat-4 .beat-4-4 { visibility: visible; }
+#tap-wrapper.beats-per-measure-4.beat-1 .beat-1-4 { visibility: visible; }
+#tap-wrapper.beats-per-measure-4.beat-2 .beat-2-4 { visibility: visible; }
+#tap-wrapper.beats-per-measure-4.beat-3 .beat-3-4 { visibility: visible; }
+#tap-wrapper.beats-per-measure-4.beat-4 .beat-4-4 { visibility: visible; }
+#tap-wrapper.beats-per-measure-3.beat-1 .beat-1-3 { visibility: visible; }
+#tap-wrapper.beats-per-measure-3.beat-2 .beat-2-3 { visibility: visible; }
+#tap-wrapper.beats-per-measure-3.beat-3 .beat-3-3 { visibility: visible; }
 
