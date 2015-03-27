@@ -10,6 +10,12 @@ function median(values) {
   }
 }
 
+function variance(values){
+  var mean = _.mean(values);
+  var dev  = _.map(values, function(item){ return (item-mean)*(item-mean); });
+  return dev.reduce(function(a, b){ return a+b; })/values.length;
+};
+
 app.factory('WebSocketFactory', function($q) {
   return {
     create: function(hash) {
@@ -56,9 +62,18 @@ app.factory('TimeSynchronizationFactory', function(WebSocketFactory, $q) {
             if (results.length < MEASUREMENTS) {
               sendPing();
             } else {
-              connection.close();
-              var offset = median(results);
-              deferred.resolve(offset);
+              // Get the middle 4 results, make sure the variance is resonable
+              var closeResults = results.slice(3, 7);
+              var timeVariance = variance(closeResults);
+              if (timeVariance > .001) {
+                console.log("re-syncing, variance (" + timeVariance + ") was too high.");
+                results = [];
+                sendPing();
+              } else {
+                connection.close();
+                var offset = median(results);
+                deferred.resolve(offset);
+              }
             }
           };
           sendPing();
