@@ -101,13 +101,24 @@ app.factory('ToneFactory', function($timeout) {
       return {
         context: new (window.AudioContext || window.webkitAudioContext),
         play:    function(frequencyInHz, durationInMs) {
+          var now = this.context.currentTime;
+
+          // Create gain node to control envelope
+          var gainNode = this.context.createGain();
+          gainNode.connect(this.context.destination);
+          gainNode.gain.setValueAtTime(0, now);
+          gainNode.gain.linearRampToValueAtTime(1.0, now + durationInMs/1000.0/100.0);
+          gainNode.gain.linearRampToValueAtTime(0.0, now + durationInMs/1000.0);
+
+          // Create oscillator to play sound
           var oscillator = this.context.createOscillator();
+          oscillator.type = 'sine';
           oscillator.frequency.value = frequencyInHz;
-          oscillator.connect(this.context.destination);
+          oscillator.connect(gainNode);
           if (oscillator.noteOn) oscillator.start = oscillator.noteOn;
           if (oscillator.noteOff) oscillator.stop = oscillator.noteOff;
-          oscillator.start(this.context.currentTime);
-          oscillator.stop(this.context.currentTime + durationInMs/1000.0);
+          oscillator.start(now);
+          oscillator.stop(now + durationInMs/1000.0);
         }
       };
     }
