@@ -233,6 +233,12 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     $(window).trigger('settings:change');
   });
 
+  $scope.sync = function() {
+    $scope.offset = null;  // Shows loading screen
+    var syncResult = TimeSynchronizationFactory.getOffset();
+    syncResult.then(function(val) { $scope.offset = val; });
+  };
+
   var recentTaps = [];
   var setTempo = function() {
     $scope.$apply(function() {
