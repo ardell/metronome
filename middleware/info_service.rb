@@ -7,12 +7,14 @@ class MetronomeConfig
 
   attr_accessor :beatsPerMinute
   attr_accessor :beatsPerMeasure
+  attr_accessor :key
   attr_accessor :startTime
   attr_accessor :clients
 
   def initialize
     @beatsPerMinute  = 100
     @beatsPerMeasure = 4
+    @key             = 'a'
     @startTime       = Time.now.to_f
     @clients         = []
   end
@@ -21,6 +23,7 @@ class MetronomeConfig
     {
       beatsPerMinute:  @beatsPerMinute,
       beatsPerMeasure: @beatsPerMeasure,
+      key:             @key,
       startTime:       @startTime,
     }.to_json
   end
@@ -92,6 +95,7 @@ module Metronome
         hash = JSON.parse(event.data)
         metronome.beatsPerMinute  = hash['beatsPerMinute']
         metronome.beatsPerMeasure = hash['beatsPerMeasure']
+        metronome.key             = hash['key']
         metronome.startTime       = hash['startTime']
 
         # Notify clients
@@ -115,5 +119,4 @@ module Metronome
     end
   end
 end
-
 

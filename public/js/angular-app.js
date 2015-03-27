@@ -170,6 +170,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   // Query server for tempo, time sig, and start time via websockets (and set up handlers for when new data comes through)
   $scope.beatsPerMinute  = null;
   $scope.beatsPerMeasure = null;
+  $scope.key             = 'a';
   $scope.startTime       = getServerTime($scope.offset);
   var deferred           = $q.defer();
   var infoWebSocket      = deferred.promise;
@@ -184,10 +185,31 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
           $scope.beatsPerMinute  = data.beatsPerMinute;
           $scope.beatsPerMeasure = data.beatsPerMeasure;
           $scope.startTime       = data.startTime;
+          $scope.key             = data.key;
         });
       }
     });
     ws.then(function() { deferred.resolve(ws); });
+  });
+
+  $scope.frequencies = [ 880.000, 440.000 ];  // hz
+  $scope.$watch('key', function() {
+    $(window).trigger('settings:change');
+    switch($scope.key) {
+      case 'c':  $scope.frequencies = [ 523.251, 261.626 ]; break;
+      case 'c#': $scope.frequencies = [ 554.365, 277.183 ]; break;
+      case 'd':  $scope.frequencies = [ 587.33,  293.665 ]; break;
+      case 'eb': $scope.frequencies = [ 622.254, 311.127 ]; break;
+      case 'e':  $scope.frequencies = [ 659.255, 329.628 ]; break;
+      case 'f':  $scope.frequencies = [ 698.456, 349.228 ]; break;
+      case 'f#': $scope.frequencies = [ 739.989, 369.994 ]; break;
+      case 'g':  $scope.frequencies = [ 783.991, 391.995 ]; break;
+      case 'ab': $scope.frequencies = [ 830.61,  415.305 ]; break;
+      case 'a':  $scope.frequencies = [ 880.000, 440.000 ]; break;
+      case 'bb': $scope.frequencies = [ 932.328, 466.164 ]; break;
+      case 'b':  $scope.frequencies = [ 987.767, 493.883 ]; break;
+      default:   $scope.frequencies = [ 880.000, 440.000 ]; break;
+    };
   });
 
   var recentTaps = [];
@@ -210,7 +232,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
       var medianSecondsPerBeat = median(differences);
       var beatsPerMinute       = Math.round(60.0 / medianSecondsPerBeat * 10.0) / 10.0;
       $scope.beatsPerMinute    = beatsPerMinute;
-      $(window).trigger('tempo:change');
+      $(window).trigger('settings:change');
     });
   };
   var clearTaps = _.debounce(function() {
@@ -245,11 +267,12 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
 
   // Set up a watch such that when tempo/time sig/start time change, they are sent to the server via websocket
   infoWebSocket.then(function(ws) {
-    $(window).on('tempo:change', function() {
+    $(window).on('settings:change', function() {
       ws.send(JSON.stringify({
         beatsPerMinute:  $scope.beatsPerMinute,
         beatsPerMeasure: 4,
-        startTime:       $scope.startTime
+        startTime:       $scope.startTime,
+        key:             $scope.key
       }));
     });
   });
@@ -281,7 +304,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     };
   });
 
-  function loadSounds() {
+  function loadSounds($scope) {
     var toneFactory = ToneFactory.create();
 
     // Dummy sound: 10hz for 1ms (basically imperceptible)
@@ -298,7 +321,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
       if (window.MUTED) return;
       if (!document.hasFocus()) return;
       if (document.hidden) return;
-      toneFactory.play(660, 80);
+      toneFactory.play(_.first($scope.frequencies), 80);
     }
     $(window).on('tick:high', highTick);
 
@@ -307,10 +330,10 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
       if (window.MUTED) return;
       if (!document.hasFocus()) return;
       if (document.hidden) return;
-      toneFactory.play(330, 80);
+      toneFactory.play(_.last($scope.frequencies), 80);
     }
     $(window).on('tick:low', lowTick);
   };
-  loadSounds();
+  loadSounds($scope);
 }, ['$q', 'TimeSynchronizationFactory', 'WebSocketFactory', 'ToneFactory']);
 
