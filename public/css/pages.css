@@ -106,3 +106,23 @@ html.touch #show-page #tap-control #tap-button.active {
           transition-duration: 0s;
 }
 
+#tap-wrapper { position: relative; }
+#tap-wrapper #tap-control {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  z-index: 1;
+}
+#tap-wrapper .arcs {
+  width: 330px;
+  height: 330px;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+#tap-wrapper .arc { visibility: hidden; }
+#tap-wrapper.beat-1 .beat-1-4 { visibility: visible; }
+#tap-wrapper.beat-2 .beat-2-4 { visibility: visible; }
+#tap-wrapper.beat-3 .beat-3-4 { visibility: visible; }
+#tap-wrapper.beat-4 .beat-4-4 { visibility: visible; }
+
