@@ -1,3 +1,7 @@
+// Disable scrolling on touch devices
+$(document).bind('touchmove', function(e) { e.preventDefault(); });
+$('html,body').bind('touchmove', function(e) { e.preventDefault(); });
+
 var app = angular.module('metronome', []);
 
 function median(values) {
