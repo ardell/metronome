@@ -8,6 +8,7 @@ class MetronomeConfig
   attr_accessor :beatsPerMinute
   attr_accessor :beatsPerMeasure
   attr_accessor :key
+  attr_accessor :muted
   attr_accessor :startTime
   attr_accessor :clients
 
@@ -15,6 +16,7 @@ class MetronomeConfig
     @beatsPerMinute  = 100
     @beatsPerMeasure = 4
     @key             = 'a'
+    @muted           = false
     @startTime       = Time.now.to_f
     @clients         = []
   end
@@ -24,6 +26,7 @@ class MetronomeConfig
       beatsPerMinute:  @beatsPerMinute,
       beatsPerMeasure: @beatsPerMeasure,
       key:             @key,
+      muted:           @muted,
       startTime:       @startTime,
     }.to_json
   end
@@ -96,6 +99,7 @@ module Metronome
         metronome.beatsPerMinute  = hash['beatsPerMinute']
         metronome.beatsPerMeasure = hash['beatsPerMeasure']
         metronome.key             = hash['key']
+        metronome.muted           = hash['muted']
         metronome.startTime       = hash['startTime']
 
         # Notify clients

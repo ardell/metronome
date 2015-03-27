@@ -171,6 +171,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   $scope.beatsPerMinute  = null;
   $scope.beatsPerMeasure = null;
   $scope.key             = 'a';
+  $scope.muted           = false;
   $scope.startTime       = getServerTime($scope.offset);
   var deferred           = $q.defer();
   var infoWebSocket      = deferred.promise;
@@ -184,8 +185,9 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
         $scope.$apply(function() {
           $scope.beatsPerMinute  = data.beatsPerMinute;
           $scope.beatsPerMeasure = data.beatsPerMeasure;
-          $scope.startTime       = data.startTime;
           $scope.key             = data.key;
+          $scope.muted           = data.muted;
+          $scope.startTime       = data.startTime;
         });
       }
     });
@@ -210,6 +212,10 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
       case 'b':  $scope.frequencies = [ 987.767, 493.883 ]; break;
       default:   $scope.frequencies = [ 880.000, 440.000 ]; break;
     };
+  });
+
+  $scope.$watch('muted', function() {
+    $(window).trigger('settings:change');
   });
 
   var recentTaps = [];
@@ -270,9 +276,10 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     $(window).on('settings:change', function() {
       ws.send(JSON.stringify({
         beatsPerMinute:  $scope.beatsPerMinute,
-        beatsPerMeasure: 4,
-        startTime:       $scope.startTime,
-        key:             $scope.key
+        beatsPerMeasure: $scope.beatsPerMeasure,
+        key:             $scope.key,
+        muted:           $scope.muted,
+        startTime:       $scope.startTime
       }));
     });
   });
@@ -319,6 +326,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     // High tick
     highTick = function() {
       if (window.MUTED) return;
+      if ($scope.muted) return;
       if (!document.hasFocus()) return;
       if (document.hidden) return;
       toneFactory.play(_.first($scope.frequencies), 80);
@@ -328,6 +336,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     // Low tick
     lowTick = function() {
       if (window.MUTED) return;
+      if ($scope.muted) return;
       if (!document.hasFocus()) return;
       if (document.hidden) return;
       toneFactory.play(_.last($scope.frequencies), 80);

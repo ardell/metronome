@@ -5,6 +5,7 @@
         <option value="4">4/4</option>
         <option value="3">3/4</option>
       </select>
+
       <select ng-model="key">
         <option value="c">C</option>
         <option value="c#">C&#9839;</option>
@@ -19,6 +20,13 @@
         <option value="bb">B&#9837;</option>
         <option value="b">B</option>
       </select>
+
+      <div>
+        <label>
+          <input type="checkbox" ng-model="muted">
+          Mute
+        </label>
+      </div>
     </p>
 
     <div id="tap-wrapper" class="{{beatDisplayClass}}">
