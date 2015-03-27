@@ -240,6 +240,10 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     };
   });
 
+  $scope.$watch('beatsPerMeasure', function() {
+    $(window).trigger('settings:change');
+  });
+
   $scope.$watch('muted', function() {
     $(window).trigger('settings:change');
   });
