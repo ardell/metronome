@@ -1,3 +1,4 @@
+require 'redis'
 require 'faye/websocket'
 require 'json'
 require 'observer'
@@ -5,41 +6,58 @@ require 'observer'
 class MetronomeConfig
   include Observable
 
+  attr_accessor :slug
   attr_accessor :beatsPerMinute
   attr_accessor :beatsPerMeasure
   attr_accessor :key
   attr_accessor :muted
   attr_accessor :startTime
-  attr_accessor :clients
 
-  def initialize
+  def initialize(slug)
+    @slug            = slug
     @beatsPerMinute  = 100
     @beatsPerMeasure = 4
     @key             = 'a'
     @muted           = false
     @startTime       = Time.now.to_f
-    @clients         = []
   end
 
-  def to_json
+  def to_h
     {
+      slug:            @slug,
       beatsPerMinute:  @beatsPerMinute,
       beatsPerMeasure: @beatsPerMeasure,
       key:             @key,
       muted:           @muted,
       startTime:       @startTime,
-    }.to_json
+    }
+  end
+
+  def to_json
+    to_h.to_json
+  end
+
+  def self.from_json(json)
+    hash                      = JSON.parse(json)
+    metronome                 = self.new(hash['slug'])
+    metronome.beatsPerMinute  = hash['beatsPerMinute']
+    metronome.beatsPerMeasure = hash['beatsPerMeasure']
+    metronome.key             = hash['key']
+    metronome.muted           = hash['muted']
+    metronome.startTime       = hash['startTime']
+    metronome
   end
 end
 
 module Metronome
   class InfoService
     KEEPALIVE_TIME = 15 # in seconds
-    # CHANNEL        = "metronome"
+    CHANNEL        = 'metronome-updates'
 
     def initialize(app)
-      @app        = app
-      @metronomes = {}  # Indexed by slug
+      @app     = app
+      @clients = {}  # Indexed by slug
+      @redis   = Redis.new(url: ENV['REDISTOGO_URL'])
     end
 
     def call(env)
@@ -65,19 +83,24 @@ module Metronome
         end
         slug = hash['slug']
 
-        # Set up the MetronomeConfig if it doesn't already exist
-        unless @metronomes.has_key?(slug)
-          @metronomes[slug] = MetronomeConfig.new
+        # Set up the MetronomeConfig if it doesn't already exist in Redis
+        config_json = @redis.get(slug)
+        if config_json
+          metronome = MetronomeConfig.from_json(config_json)
+        else
+          metronome = MetronomeConfig.new(slug)
+          @redis.set(slug, metronome.to_json)
+          @redis.publish(CHANNEL, metronome.to_json)
           puts "Created new metronome with slug: '#{slug}'."
         end
-        metronome = @metronomes[slug]
 
         # Add the client to the list of clients for this slug
+        @clients[slug] ||= []
         puts "Connecting client ##{ws.object_id} to metronome: '#{slug}'."
-        metronome.clients << ws
+        @clients[slug] << ws
 
         # Send the current info to the client
-        ws.send @metronomes[slug].to_json
+        ws.send metronome.to_json
       end
 
       ws.on :message do |event|
@@ -89,31 +112,53 @@ module Metronome
         end
         slug = hash['slug']
 
-        unless @metronomes.has_key?(slug)
+        # Pull the existing metronome from Redis
+        config_json = @redis.get(slug)
+        unless config_json
           return puts "Metronome not found for slug: #{slug}."
         end
-        metronome = @metronomes[slug]
+        metronome = MetronomeConfig.from_json(config_json)
+        unless metronome
+          return puts "Could not parse metronome config for: #{slug}."
+        end
 
         # Make the change
         hash = JSON.parse(event.data)
-        metronome.beatsPerMinute  = hash['beatsPerMinute']
-        metronome.beatsPerMeasure = hash['beatsPerMeasure']
-        metronome.key             = hash['key']
-        metronome.muted           = hash['muted']
-        metronome.startTime       = hash['startTime']
+        metronome.beatsPerMinute  = hash['beatsPerMinute']  if hash.has_key?('beatsPerMinute')
+        metronome.beatsPerMeasure = hash['beatsPerMeasure'] if hash.has_key?('beatsPerMeasure')
+        metronome.key             = hash['key']             if hash.has_key?('key')
+        metronome.muted           = hash['muted']           if hash.has_key?('muted')
+        metronome.startTime       = hash['startTime']       if hash.has_key?('startTime')
 
-        # Notify clients
-        metronome.clients.each do |ws|
-          ws.send metronome.to_json
-        end
+        # Update redis (which will tell all the other clients)
+        @redis.set(slug, metronome.to_json)
+        @redis.publish(CHANNEL, metronome.to_json)
+
         puts "Updated metronome '#{slug}' to: #{metronome.to_json}"
+
+        ws.send metronome.to_json
       end
 
       ws.on :close do |event|
-        @metronomes.each_pair do |slug, metronome|
+        @clients.each_pair do |slug, metronome|
           if metronome.clients.include?(ws)
             metronome.clients.delete(ws)
             puts "Removing disconnected client ##{ws.object_id} from metronome: '#{slug}'."
+          end
+        end
+      end
+
+      # When there's a new message in redis, publish to any clients that are
+      # listening to that metronome
+      Thread.new do
+        redis_sub = Redis.new(url: ENV['REDISTOGO_URL'])
+        redis_sub.subscribe(CHANNEL) do |on|
+          on.message do |channel, msg|
+            slug = msg.slug
+            next unless @clients.has_key?(slug)
+            @clients[slug].each do |ws|
+              ws.send msg.to_json
+            end
           end
         end
       end

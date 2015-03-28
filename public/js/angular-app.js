@@ -200,8 +200,8 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   // Query server for tempo, time sig, and start time via websockets (and set up handlers for when new data comes through)
   $scope.beatsPerMinute  = null;
   $scope.beatsPerMeasure = null;
-  $scope.key             = 'a';
-  $scope.muted           = false;
+  $scope.key             = null;
+  $scope.muted           = null;
   $scope.startTime       = getServerTime($scope.offset);
   var deferred           = $q.defer();
   var infoWebSocket      = deferred.promise;
@@ -225,7 +225,10 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   });
 
   $scope.frequencies = [ 880.000, 440.000 ];  // hz
-  $scope.$watch('key', function() {
+  $scope.$watch('key', function(newValue, oldValue) {
+    if (angular.equals(newValue, oldValue)) return;
+    if (angular.isUndefined(newValue)) return;
+    if (oldValue == null) return;
     $(window).trigger('settings:change');
     switch($scope.key) {
       case 'c':  $scope.frequencies = [ 523.251, 261.626 ]; break;
@@ -244,11 +247,17 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     };
   });
 
-  $scope.$watch('beatsPerMeasure', function() {
+  $scope.$watch('beatsPerMeasure', function(newValue, oldValue) {
+    if (angular.equals(newValue, oldValue)) return;
+    if (angular.isUndefined(newValue)) return;
+    if (oldValue == null) return;
     $(window).trigger('settings:change');
   });
 
-  $scope.$watch('muted', function() {
+  $scope.$watch('muted', function(newValue, oldValue) {
+    if (angular.equals(newValue, oldValue)) return;
+    if (angular.isUndefined(newValue)) return;
+    if (oldValue == null) return;
     $(window).trigger('settings:change');
   });
 
