@@ -114,15 +114,29 @@ app.factory('ToneFactory', function($timeout) {
           gainNode.gain.linearRampToValueAtTime(1.0, now + durationInMs/1000.0/100.0);
           gainNode.gain.linearRampToValueAtTime(0.0, now + durationInMs/1000.0);
 
+          // Allow playing multiple pitches at the same time
+          var frequencies = frequencyInHz;
+          if (!_.isObject(frequencyInHz)) {
+            frequencies = {};
+            frequencies[frequencyInHz] = 1.0;
+          }
+
           // Create oscillator to play sound
-          var oscillator = this.context.createOscillator();
-          oscillator.type = 'sine';
-          oscillator.frequency.value = frequencyInHz;
-          oscillator.connect(gainNode);
-          if (oscillator.noteOn) oscillator.start = oscillator.noteOn;
-          if (oscillator.noteOff) oscillator.stop = oscillator.noteOff;
-          oscillator.start(now);
-          oscillator.stop(now + durationInMs/1000.0);
+          var _context = this.context;
+          _.each(frequencies, function(gain, frequency) {
+            var individualGainNode = _context.createGain();
+            individualGainNode.connect(gainNode);
+            individualGainNode.gain.setValueAtTime(gain, now);
+
+            var oscillator = _context.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.value = frequency;
+            oscillator.connect(individualGainNode);
+            if (oscillator.noteOn) oscillator.start = oscillator.noteOn;
+            if (oscillator.noteOff) oscillator.stop = oscillator.noteOff;
+            oscillator.start(now);
+            oscillator.stop(now + durationInMs/1000.0);
+          });
         }
       };
     }
@@ -247,19 +261,24 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     if (angular.equals(newValue, oldValue)) return;
     if (angular.isUndefined(newValue)) return;
     switch($scope.key) {
-      case 'c':  $scope.frequencies = [ 523.251, 261.626 ]; break;
-      case 'c#': $scope.frequencies = [ 554.365, 277.183 ]; break;
-      case 'd':  $scope.frequencies = [ 587.33,  293.665 ]; break;
-      case 'eb': $scope.frequencies = [ 622.254, 311.127 ]; break;
-      case 'e':  $scope.frequencies = [ 659.255, 329.628 ]; break;
-      case 'f':  $scope.frequencies = [ 698.456, 349.228 ]; break;
-      case 'f#': $scope.frequencies = [ 739.989, 369.994 ]; break;
-      case 'g':  $scope.frequencies = [ 783.991, 391.995 ]; break;
-      case 'ab': $scope.frequencies = [ 830.61,  415.305 ]; break;
-      case 'a':  $scope.frequencies = [ 880.000, 440.000 ]; break;
-      case 'bb': $scope.frequencies = [ 932.328, 466.164 ]; break;
-      case 'b':  $scope.frequencies = [ 987.767, 493.883 ]; break;
-      default:   $scope.frequencies = [ 880.000, 440.000 ]; break;
+      case 'c':    $scope.frequencies = [ 523.251, 261.626 ]; break;
+      case 'c#':   $scope.frequencies = [ 554.365, 277.183 ]; break;
+      case 'd':    $scope.frequencies = [ 587.33,  293.665 ]; break;
+      case 'eb':   $scope.frequencies = [ 622.254, 311.127 ]; break;
+      case 'e':    $scope.frequencies = [ 659.255, 329.628 ]; break;
+      case 'f':    $scope.frequencies = [ 698.456, 349.228 ]; break;
+      case 'f#':   $scope.frequencies = [ 739.989, 369.994 ]; break;
+      case 'g':    $scope.frequencies = [ 783.991, 391.995 ]; break;
+      case 'ab':   $scope.frequencies = [ 830.61,  415.305 ]; break;
+      case 'a':    $scope.frequencies = [ 880.000, 440.000 ]; break;
+      case 'bb':   $scope.frequencies = [ 932.328, 466.164 ]; break;
+      case 'b':    $scope.frequencies = [ 987.767, 493.883 ]; break;
+      // case 'tock': $scope.frequencies = [
+      //     { 261:  0.25, 580:  0.25, 822:  0.5, 1080: 1.0, 1266: 0.75, 1360: 0.5, 1545: 0.25, 1658: 0.25, },
+      //     { 261:  0.25, 580:  0.25, 822:  0.5, 1080: 1.0, 1266: 0.75, 1360: 0.5, 1545: 0.25, 1658: 0.25, }
+      //   ];
+      //   break;
+      default:     $scope.frequencies = [ 880.000, 440.000 ]; break;
     };
     if (oldValue == null) return;
     $(window).trigger('settings:change');
