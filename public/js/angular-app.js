@@ -246,8 +246,6 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   $scope.$watch('key', function(newValue, oldValue) {
     if (angular.equals(newValue, oldValue)) return;
     if (angular.isUndefined(newValue)) return;
-    if (oldValue == null) return;
-    $(window).trigger('settings:change');
     switch($scope.key) {
       case 'c':  $scope.frequencies = [ 523.251, 261.626 ]; break;
       case 'c#': $scope.frequencies = [ 554.365, 277.183 ]; break;
@@ -263,6 +261,8 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
       case 'b':  $scope.frequencies = [ 987.767, 493.883 ]; break;
       default:   $scope.frequencies = [ 880.000, 440.000 ]; break;
     };
+    if (oldValue == null) return;
+    $(window).trigger('settings:change');
   });
 
   $scope.$watch('beatsPerMeasure', function(newValue, oldValue) {
