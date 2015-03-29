@@ -8,7 +8,7 @@ body, html {
 
 body {
   margin: 0;
-  padding: 0;
+  padding: 71px 0 0 0;
 }
 
 /***
@@ -58,13 +58,29 @@ body {
   overflow: hidden;
 }
 
-#show-page #tap-control .tempo {
+#show-page #tap-control .tempo,
+#show-page #tap-control .tempo-edit {
   text-align: center;
   font-size: 32pt;
   background-color: #333;
   color: #888;
   border-bottom: 1px solid #555;
   line-height: 1.9;
+}
+
+#show-page #tap-control .tempo-edit {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-width: 0 0 1px 0;
+  padding: 0;
+  z-index: -1;  /* until we get it showing/hiding on click */
+}
+#show-page #tap-control .tempo-edit:focus {
+  outline: none;
+  background-color: #888;
+  color: #333;
 }
 
 #show-page #tap-control #tap-button {
@@ -110,7 +126,12 @@ html.touch #show-page #tap-control #tap-button.active {
           transition-duration: 0s;
 }
 
-#tap-wrapper { position: relative; }
+#tap-wrapper {
+  position: relative;
+  width:    330px;
+  height:   330px;
+  margin:   auto;
+}
 #tap-wrapper #tap-control {
   position: absolute;
   top: 15px;

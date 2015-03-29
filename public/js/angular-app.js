@@ -2,7 +2,7 @@
 $(document).bind('touchmove', function(e) { e.preventDefault(); });
 $('html,body').bind('touchmove', function(e) { e.preventDefault(); });
 
-var app = angular.module('metronome', []);
+var app = angular.module('metronome', ['frapontillo.bootstrap-switch']);
 
 function median(values) {
   values.sort(function(a,b) { return a - b; });
@@ -182,6 +182,24 @@ app.factory('RunLoopFactory', function() {
   runLoop._init();
   return runLoop;
 });
+
+app.directive('selectOnClick', function() {
+  return {
+    restrict: 'A',
+    link: function(scope, element, attr) {
+      jQuery(element).click(function() { jQuery(this).select(); });
+    }
+  };
+});
+
+// app.directive('bootstrapSwitch', function() {
+//   return {
+//     restrict: 'A',
+//     link: function(scope, element, attr) {
+//       jQuery(element).bootstrapSwitch();
+//     }
+//   };
+// });
 
 app.controller('IndexController', function($scope) {
   $scope.slug = "";
