@@ -58,6 +58,26 @@ module Metronome
       @app     = app
       @clients = {}  # Indexed by slug
       @redis   = Redis.new(url: ENV['REDISTOGO_URL'])
+
+      # When there's a new message in redis, publish to any clients that are
+      # listening to that metronome
+      Thread.new do
+        redis_sub = Redis.new(url: ENV['REDISTOGO_URL'])
+        redis_sub.subscribe(CHANNEL) do |on|
+          on.message do |channel, msg|
+            begin
+              obj  = JSON.parse(msg)
+              slug = obj['slug']
+              next unless @clients.has_key?(slug)
+              @clients[slug].each do |ws|
+                ws.send msg
+              end
+            rescue => e
+              puts "error: #{e.inspect}"
+            end
+          end
+        end
+      end
     end
 
     def call(env)
@@ -144,21 +164,6 @@ module Metronome
           if metronome.clients.include?(ws)
             metronome.clients.delete(ws)
             puts "Removing disconnected client ##{ws.object_id} from metronome: '#{slug}'."
-          end
-        end
-      end
-
-      # When there's a new message in redis, publish to any clients that are
-      # listening to that metronome
-      Thread.new do
-        redis_sub = Redis.new(url: ENV['REDISTOGO_URL'])
-        redis_sub.subscribe(CHANNEL) do |on|
-          on.message do |channel, msg|
-            slug = msg.slug
-            next unless @clients.has_key?(slug)
-            @clients[slug].each do |ws|
-              ws.send msg.to_json
-            end
           end
         end
       end
