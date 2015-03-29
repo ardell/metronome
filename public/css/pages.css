@@ -184,3 +184,8 @@ html.touch #show-page #tap-control #tap-button.active {
 #tap-wrapper.beats-per-measure-3.beat-2 .beat-2-3 { visibility: visible; }
 #tap-wrapper.beats-per-measure-3.beat-3 .beat-3-3 { visibility: visible; }
 
+.modal-sm {
+  margin: auto;
+  margin-top: 71px;
+}
+

@@ -242,6 +242,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   $scope.beatsPerMeasure = null;
   $scope.key             = null;
   $scope.muted           = null;
+  $scope.presets         = null;
   $scope.startTime       = getServerTime($scope.offset);
   var deferred           = $q.defer();
   var infoWebSocket      = deferred.promise;
@@ -257,12 +258,21 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
           $scope.beatsPerMeasure = data.beatsPerMeasure;
           $scope.key             = data.key;
           $scope.muted           = data.muted;
+          $scope.presets         = data.presets;
           $scope.startTime       = data.startTime;
         });
       }
     });
     ws.then(function() { deferred.resolve(ws); });
   });
+
+  $scope.loadPreset = function(preset) {
+    var serverTime = getServerTime($scope.offset);
+    $scope.key             = preset.key;
+    $scope.beatsPerMinute  = preset.beatsPerMinute;
+    $scope.beatsPerMeasure = preset.beatsPerMeasure;
+    $scope.startTime       = serverTime;
+  }
 
   $scope.frequencies = [ 880.000, 440.000 ];  // hz
   $scope.$watch('key', function(newValue, oldValue) {
@@ -300,6 +310,13 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   });
 
   $scope.$watch('muted', function(newValue, oldValue) {
+    if (angular.equals(newValue, oldValue)) return;
+    if (angular.isUndefined(newValue)) return;
+    if (oldValue == null) return;
+    $(window).trigger('settings:change');
+  });
+
+  $scope.$watch('presets', function(newValue, oldValue) {
     if (angular.equals(newValue, oldValue)) return;
     if (angular.isUndefined(newValue)) return;
     if (oldValue == null) return;
@@ -373,6 +390,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
         beatsPerMeasure: $scope.beatsPerMeasure,
         key:             $scope.key,
         muted:           $scope.muted,
+        presets:         $scope.presets,
         startTime:       $scope.startTime
       }));
     });

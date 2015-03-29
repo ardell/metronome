@@ -11,6 +11,7 @@ class MetronomeConfig
   attr_accessor :beatsPerMeasure
   attr_accessor :key
   attr_accessor :muted
+  attr_accessor :presets
   attr_accessor :startTime
 
   def initialize(slug)
@@ -19,6 +20,11 @@ class MetronomeConfig
     @beatsPerMeasure = 4
     @key             = 'a'
     @muted           = false
+    @presets         = [
+      { title: "Til' You're Gone", beatsPerMinute:  86.0, beatsPerMeasure: 4, key: 'd' },
+      { title: 'Disappear',        beatsPerMinute: 125.0, beatsPerMeasure: 4, key: 'a' },
+      { title: "Runnin' on Fumes", beatsPerMinute:  83.0, beatsPerMeasure: 4, key: 'c' },
+    ]
     @startTime       = Time.now.to_f
   end
 
@@ -29,6 +35,7 @@ class MetronomeConfig
       beatsPerMeasure: @beatsPerMeasure,
       key:             @key,
       muted:           @muted,
+      presets:         @presets,
       startTime:       @startTime,
     }
   end
@@ -44,6 +51,7 @@ class MetronomeConfig
     metronome.beatsPerMeasure = hash['beatsPerMeasure']
     metronome.key             = hash['key']
     metronome.muted           = hash['muted']
+    metronome.presets         = hash['presets']
     metronome.startTime       = hash['startTime']
     metronome
   end
