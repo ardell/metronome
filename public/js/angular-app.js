@@ -206,14 +206,22 @@ app.directive('selectOnClick', function() {
   };
 });
 
-// app.directive('bootstrapSwitch', function() {
-//   return {
-//     restrict: 'A',
-//     link: function(scope, element, attr) {
-//       jQuery(element).bootstrapSwitch();
-//     }
-//   };
-// });
+app.directive('muteSwitch', function() {
+  return {
+    restrict: 'A',
+    link: function(scope, element, attr) {
+      setTimeout(jQuery.proxy(function() {
+        var container = this.parents('.bootstrap-switch-container');
+        container
+          .find('.bootstrap-switch-handle-on')
+          .html("<i class='glyphicon glyphicon-volume-off'></i>");
+        container
+          .find('.bootstrap-switch-handle-off')
+          .html("<i class='glyphicon glyphicon-volume-up'></i>");
+      }, element), 0);
+    }
+  };
+});
 
 app.controller('IndexController', function($scope) {
   $scope.slug = "";
