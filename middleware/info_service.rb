@@ -20,11 +20,7 @@ class MetronomeConfig
     @beatsPerMeasure = 4
     @key             = 'a'
     @muted           = false
-    @presets         = [
-      { title: "Til' You're Gone", beatsPerMinute:  86.0, beatsPerMeasure: 4, key: 'd' },
-      { title: 'Disappear',        beatsPerMinute: 125.0, beatsPerMeasure: 4, key: 'a' },
-      { title: "Runnin' on Fumes", beatsPerMinute:  83.0, beatsPerMeasure: 4, key: 'c' },
-    ]
+    @presets         = []
     @startTime       = Time.now.to_f
   end
 
@@ -51,7 +47,7 @@ class MetronomeConfig
     metronome.beatsPerMeasure = hash['beatsPerMeasure']
     metronome.key             = hash['key']
     metronome.muted           = hash['muted']
-    metronome.presets         = hash['presets']
+    metronome.presets         = hash['presets'] || []
     metronome.startTime       = hash['startTime']
     metronome
   end
@@ -156,6 +152,7 @@ module Metronome
         metronome.beatsPerMeasure = hash['beatsPerMeasure'] if hash.has_key?('beatsPerMeasure')
         metronome.key             = hash['key']             if hash.has_key?('key')
         metronome.muted           = hash['muted']           if hash.has_key?('muted')
+        metronome.presets         = hash['presets']         if hash.has_key?('presets')
         metronome.startTime       = hash['startTime']       if hash.has_key?('startTime')
 
         # Update redis (which will tell all the other clients)

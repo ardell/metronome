@@ -232,6 +232,35 @@ app.controller('IndexController', function($scope) {
   };
 }, []);
 
+app.controller('AddPresetController', function($scope) {
+  var modal = $('.add-preset-dialog');
+
+  modal.on('show.bs.modal', function (e) {
+    $scope.$apply(function() {
+      $scope.newTitle           = $scope.title;
+      $scope.newBeatsPerMinute  = $scope.beatsPerMinute;
+      $scope.newBeatsPerMeasure = $scope.beatsPerMeasure;
+      $scope.newKey             = $scope.key;
+    });
+  });
+  modal.on('shown.bs.modal', function (e) {
+    setTimeout(function() { $('#new-title').focus(); }, 500 );
+  });
+
+  $scope.addPreset = function() {
+    $scope.presets = $scope.presets || [];
+    $scope.presets.push({
+      title:           $scope.newTitle,
+      beatsPerMinute:  $scope.newBeatsPerMinute,
+      beatsPerMeasure: $scope.newBeatsPerMeasure,
+      key:             $scope.newKey
+    });
+    $(window).trigger('settings:change');
+
+    modal.modal('hide')
+  };
+});
+
 app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory, WebSocketFactory, ToneFactory, RunLoopFactory) {
   // Sync time via websocket service (and return a promise that will resolve to offset when time is sufficiently accurate)
   var syncResult = TimeSynchronizationFactory.getOffset();
@@ -242,7 +271,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   $scope.beatsPerMeasure = null;
   $scope.key             = null;
   $scope.muted           = null;
-  $scope.presets         = null;
+  $scope.presets         = [];
   $scope.startTime       = getServerTime($scope.offset);
   var deferred           = $q.defer();
   var infoWebSocket      = deferred.promise;
@@ -267,11 +296,12 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   });
 
   $scope.loadPreset = function(preset) {
-    var serverTime = getServerTime($scope.offset);
+    var serverTime         = getServerTime($scope.offset);
     $scope.key             = preset.key;
     $scope.beatsPerMinute  = preset.beatsPerMinute;
     $scope.beatsPerMeasure = preset.beatsPerMeasure;
     $scope.startTime       = serverTime;
+    $(window).trigger('settings:change');
   }
 
   $scope.frequencies = [ 880.000, 440.000 ];  // hz
