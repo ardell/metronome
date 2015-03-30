@@ -49,6 +49,12 @@ body {
 #show-page.beat-3 { background-color: yellow; }
 #show-page.beat-4 { background-color: white;  }
 
+.nav-sidebar {
+  margin-right: -15px;
+  margin-bottom: 20px;
+  margin-left:  -15px;
+}
+
 @media (min-width: 768px) {
   .sidebar {
     position: fixed;
@@ -71,12 +77,12 @@ body {
     padding: 0 15px;
     color: #666;
   }
-}
 
-.nav-sidebar {
-  margin-right: -21px;
-  margin-bottom: 20px;
-  margin-left: -20px;
+  .nav-sidebar {
+    margin-right: -21px;
+    margin-bottom: 20px;
+    margin-left:  -20px;
+  }
 }
 
 .nav-sidebar > li { border-top: 1px solid #ddd; }
