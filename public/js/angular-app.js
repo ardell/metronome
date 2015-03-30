@@ -270,32 +270,19 @@ app.controller('IndexController', function($scope) {
   };
 }, []);
 
-app.controller('AddPresetController', function($scope) {
-  var modal = $('.add-preset-dialog');
-
-  modal.on('show.bs.modal', function (e) {
-    $scope.$apply(function() {
-      $scope.newTitle           = $scope.title;
-      $scope.newBeatsPerMinute  = $scope.beatsPerMinute;
-      $scope.newBeatsPerMeasure = $scope.beatsPerMeasure;
-      $scope.newKey             = $scope.key;
-    });
-  });
-  modal.on('shown.bs.modal', function (e) {
-    setTimeout(function() { $('#new-title').focus(); }, 500 );
-  });
-
-  $scope.addPreset = function() {
-    $scope.$parent.presets = $scope.$parent.presets || [];
-    $scope.$parent.presets.push({
-      title:           $scope.newTitle,
-      beatsPerMinute:  $scope.newBeatsPerMinute,
-      beatsPerMeasure: $scope.newBeatsPerMeasure,
-      key:             $scope.newKey
-    });
+app.controller('PresetFormController', function($scope) {
+  $scope.savePreset = function() {
+    if ($scope.presetFormType == 'new') {
+      $scope.$parent.presets = $scope.$parent.presets || [];
+      $scope.$parent.presets.push($scope.presetEditAfter);
+    } else {
+      // Delete old preset
+      var index = $scope.$parent.presets.indexOf($scope.presetEditBefore);
+      $scope.$parent.presets.splice(index, 1, $scope.presetEditAfter);
+    }
     $(window).trigger('settings:change');
 
-    modal.modal('hide')
+    $('.preset-form-dialog').modal('hide')
   };
 });
 
@@ -355,6 +342,30 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     if (index < 0) return;
     $scope.presets.splice(index, 1);
     $(window).trigger('settings:change');
+  }
+
+  $scope.presetEditBefore = {};
+  $scope.presetEditAfter  = {};
+  $scope.editPreset       = function(preset) {
+    if (preset) {
+      $scope.presetFormType   = 'edit';
+      $scope.presetEditBefore = preset;
+      $scope.presetEditAfter  = angular.copy(preset);
+    } else {
+      $scope.presetFormType  = 'new';
+      $scope.presetEditAfter = {
+        title:           $scope.title,
+        key:             $scope.key,
+        beatsPerMinute:  $scope.beatsPerMinute,
+        beatsPerMeasure: $scope.beatsPerMeasure
+      };
+    }
+
+    // Open dialog
+    $('.preset-form-dialog').modal('show');
+
+    // Focus on the new title input field
+    setTimeout(function() { $('#new-title').focus().select(); }, 500);
   }
 
   $scope.frequencies = [ 880.000, 440.000 ];  // hz
