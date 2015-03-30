@@ -158,6 +158,7 @@ function getBeatsSinceStart(offset, startTime, beatsPerMinute) {
   return beats;
 };
 function getBeat(offset, startTime, beatsPerMinute, beatsPerMeasure) {
+  if (beatsPerMeasure == 'no-emphasis') beatsPerMeasure = 2;
   return Math.floor(getBeatsSinceStart(offset, startTime, beatsPerMinute)) % beatsPerMeasure + 1;
 };
 
@@ -500,13 +501,11 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
 
   // When beat changes, play a sound
   $scope.$watch('beat', function() {
-    switch($scope.beat) {
-      case 1:
-        $(window).trigger('tick:high');
-        break;
-      default:
-        $(window).trigger('tick:low');
-    };
+    if ($scope.beat == 1 && $scope.beatsPerMeasure != 'no-emphasis') {
+      $(window).trigger('tick:high');
+    } else {
+      $(window).trigger('tick:low');
+    }
   });
 
   function loadSounds($scope) {
