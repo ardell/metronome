@@ -79,6 +79,13 @@ body {
   margin-left: -20px;
 }
 
+.nav-sidebar > li { border-top: 1px solid #ddd; }
+.nav-sidebar > li:last-child,
+.nav-sidebar > li.empty {
+  border-bottom: 1px solid #ddd;
+}
+.nav-sidebar > li.empty { padding: 10px 15px; }
+
 .nav-sidebar .actions {
   vertical-align: middle;
   line-height: 39px;
@@ -100,8 +107,6 @@ html.no-touch .nav-sidebar li:hover .actions {
 html.touch .nav-sidebar li.swiped:hover .actions {
   display: inline;
 }
-
-.nav-sidebar li.empty { padding: 0 15px; }
 
 #show-page #tap-control {
   width: 300px;

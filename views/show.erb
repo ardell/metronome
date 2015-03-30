@@ -12,6 +12,10 @@
           </h4>
 
           <ul class="nav nav-sidebar" on-tap-hold-add-class="sorting">
+            <li ng-show="!presets || presets.length < 1" class="empty">
+              You haven't created any presets yet.
+            </li>
+
             <li ng-repeat="preset in presets" on-swipe-left-add-class="swiped">
               <span class="pull-right actions">
                 <a href="#" class="btn btn-default" alt="Edit Preset" ng-click="editPreset(preset)">
@@ -26,10 +30,6 @@
                 {{preset.title}}
               </a>
             </li>
-
-            <li ng-show="!presets || presets.length < 1" class="empty">
-              You haven't created any presets yet.
-            </li>
           </ul>
         </div>
 
@@ -41,7 +41,7 @@
                   <option value="4">4/4</option>
                   <option value="3">3/4</option>
                   <option value="2">2/4</option>
-                  <option value="no-emphasis">No Emphasis</option>
+                  <option value="no-emphasis">Straight</option>
                 </select>
 
                 <select ng-model="key" class="form-control" style="display: inline; width: auto;">
