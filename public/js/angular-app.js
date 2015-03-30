@@ -270,6 +270,12 @@ app.controller('IndexController', function($scope) {
   };
 }, []);
 
+app.controller('PresetListController', function($scope) {
+  $scope.dismissModal = function() {
+    $('.preset-list-dialog').modal('hide');
+  };
+});
+
 app.controller('PresetFormController', function($scope) {
   $scope.savePreset = function() {
     if ($scope.presetFormType == 'new') {
@@ -282,7 +288,7 @@ app.controller('PresetFormController', function($scope) {
     }
     $(window).trigger('settings:change');
 
-    $('.preset-form-dialog').modal('hide')
+    $('.preset-form-dialog').modal('hide');
   };
 });
 

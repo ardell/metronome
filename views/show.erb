@@ -1,4 +1,26 @@
 <div id="show-page" ng-controller="ShowController">
+  <nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle navbar-item">
+          <i class="glyphicon glyphicon-user"></i> 3
+        </button>
+
+        <button type="button" class="navbar-toggle navbar-item" data-toggle="modal" data-target=".preset-list-dialog">
+          <i class="glyphicon glyphicon-list"></i> {{presets.length}}
+        </button>
+
+        <span class="navbar-brand">Shared Metronome</span>
+      </div> <!-- .navbar-header -->
+
+     <div id="navbar" class="collapse navbar-collapse">
+       <ul class="nav navbar-nav navbar-right">
+         <li><a href="#"><i class="glyphicon glyphicon-user"></i> 3</a></li>
+       </ul>
+     </div> <!-- .navbar-collapse -->
+    </div> <!-- .container-fluid -->
+  </nav>
+
   <div ng-show="offset">
     <div class="container-fluid">
       <div class="row">
@@ -25,6 +47,7 @@
                   <i class="glyphicon glyphicon-trash"></i>
                 </a>
               </span>
+
               <a href="#" ng-click="loadPreset(preset)">
                 <span class="sort-handle">||</span>
                 {{preset.title}}
@@ -169,6 +192,48 @@
             <button type="submit" class="btn btn-primary">Save</button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade preset-list-dialog" tabindex="-1" role="dialog" aria-hidden="true" ng-controller="PresetListController">
+    <div class="modal-sm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Presets</h4>
+        </div>
+
+        <div class="modal-body">
+          <ul class="nav nav-sidebar" on-tap-hold-add-class="sorting">
+            <li ng-show="!presets || presets.length < 1" class="empty">
+              You haven't created any presets yet.
+            </li>
+
+            <li ng-repeat="preset in presets" on-swipe-left-add-class="swiped">
+              <span class="pull-right actions">
+                <a href="#" class="btn btn-default" alt="Edit Preset" ng-click="editPreset(preset); dismissModal();">
+                  <i class="glyphicon glyphicon-pencil"></i>
+                </a>
+                <a href="#" class="btn btn-danger" ng-click="deletePreset(preset)">
+                  <i class="glyphicon glyphicon-trash"></i>
+                </a>
+              </span>
+
+              <a href="#" ng-click="loadPreset(preset); dismissModal();">
+                <span class="sort-handle">||</span>
+                {{preset.title}}
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="modal-footer">
+          <a href="#" class="btn btn-success" ng-click="editPreset(); dismissModal();">
+            <i class="glyphicon glyphicon-plus" aria-hidden="true"></i>
+            New Preset
+          </a>
+        </div>
       </div>
     </div>
   </div>

@@ -26,28 +26,22 @@ body {
   height: 100%;
 }
 
-#show-page label,
-#show-page span {
-  width: 9em;
+.navbar-item {
+  color: #9d9d9d;
+  min-width: 38px;
+  border: 0;
+  padding: 7px 0;
 }
-
-#show-page #count {
-  font-size: 72pt;
+button.navbar-item:last-of-type { margin-right: 8px; }
+.navbar-item:hover,   .navbar-item:active,
+.navbar-item:hover i, .navbar-item:active i {
+  color: #fff;
 }
-
-#show-page #beat {
-  font-size: 800%;
+.navbar-inverse .navbar-item:hover,
+.navbar-inverse .navbar-item:active,
+.navbar-inverse .navbar-item:visited {
+  background: none;
 }
-
-#show-page th,
-#show-page td {
-  width: 200px; border: 1px solid #ddd;
-}
-
-#show-page.beat-1 { background-color: red;    }
-#show-page.beat-2 { background-color: orange; }
-#show-page.beat-3 { background-color: yellow; }
-#show-page.beat-4 { background-color: white;  }
 
 .nav-sidebar {
   margin-right: -15px;
@@ -239,5 +233,10 @@ html.touch #show-page #tap-control #tap-button.active {
 .modal-sm {
   margin: auto;
   margin-top: 71px;
+}
+
+.preset-list-dialog ul.nav-sidebar {
+  margin-top: -16px;
+  margin-bottom: -16px;
 }
 
