@@ -12,6 +12,7 @@ class MetronomeConfig
   attr_accessor :key
   attr_accessor :muted
   attr_accessor :presets
+  attr_accessor :clients
   attr_accessor :startTime
 
   def initialize(slug)
@@ -21,6 +22,7 @@ class MetronomeConfig
     @key             = 'a'
     @muted           = false
     @presets         = []
+    @clients         = []
     @startTime       = Time.now.to_f
   end
 
@@ -32,6 +34,7 @@ class MetronomeConfig
       key:             @key,
       muted:           @muted,
       presets:         @presets,
+      clients:         @clients,
       startTime:       @startTime,
     }
   end
@@ -48,6 +51,7 @@ class MetronomeConfig
     metronome.key             = hash['key']
     metronome.muted           = hash['muted']
     metronome.presets         = hash['presets'] || []
+    metronome.clients         = hash['clients'] || []
     metronome.startTime       = hash['startTime']
     metronome
   end
@@ -113,12 +117,15 @@ module Metronome
           metronome = MetronomeConfig.from_json(config_json)
         else
           metronome = MetronomeConfig.new(slug)
-          @redis.set(slug, metronome.to_json)
-          @redis.publish(CHANNEL, metronome.to_json)
           puts "Created new metronome with slug: '#{slug}'."
         end
 
-        # Add the client to the list of clients for this slug
+        # Add this user to the list of clients for this metronome
+        metronome.clients << 'one'
+        @redis.set(slug, metronome.to_json)
+        @redis.publish(CHANNEL, metronome.to_json)
+
+        # Add the client to the list of clients for this slug on this server
         @clients[slug] ||= []
         puts "Connecting client ##{ws.object_id} to metronome: '#{slug}'."
         @clients[slug] << ws
@@ -165,10 +172,27 @@ module Metronome
       end
 
       ws.on :close do |event|
-        @clients.each_pair do |slug, metronome|
-          if metronome.clients.include?(ws)
-            metronome.clients.delete(ws)
+        @clients.each_pair do |slug, clients|
+          if clients.include?(ws)
             puts "Removing disconnected client ##{ws.object_id} from metronome: '#{slug}'."
+            @clients[slug].delete(ws)
+
+            # Got the slug
+            begin
+              config_json = @redis.get(slug)
+              unless config_json
+                return puts "Metronome not found for slug: #{slug}."
+              end
+              metronome = MetronomeConfig.from_json(config_json)
+              unless metronome
+                return puts "Could not parse metronome config for: #{slug}."
+              end
+              metronome.clients.pop
+              @redis.set(slug, metronome.to_json)
+              @redis.publish(CHANNEL, metronome.to_json)
+            rescue => e
+              puts e.inspect
+            end
           end
         end
       end
