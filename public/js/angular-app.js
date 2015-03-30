@@ -224,6 +224,25 @@ app.directive('onSwipeLeftAddClass', function() {
   };
 });
 
+app.directive('onTapHoldAddClass', function() {
+  return {
+    restrict: 'A',
+    scope: { 'onTapHoldAddClass': '@' },
+    link: function(scope, element, attr) {
+      var $el = jQuery(element);
+      $el.on('taphold', function() {
+        $el.addClass(scope.onTapHoldAddClass);
+        jQuery('body').one('touchstart', function() {
+          setTimeout(function() {
+            $el.removeClass(scope.onTapHoldAddClass);
+          }, 500);
+        });
+        return false;
+      });
+    }
+  };
+});
+
 app.directive('muteSwitch', function() {
   return {
     restrict: 'A',

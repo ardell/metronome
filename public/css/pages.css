@@ -89,6 +89,10 @@ body {
   display: none;
 }
 
+.nav-sidebar { -webkit-touch-callout: none !important; }
+.nav-sidebar .sort-handle { display: none; }
+.nav-sidebar.sorting .sort-handle { display: inline; }
+
 html.no-touch .nav-sidebar li:hover .actions {
   display: inline;
 }
