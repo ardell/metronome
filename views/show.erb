@@ -153,39 +153,45 @@
             </div>
 
             <div class="form-group">
-              <label>Tempo</label>
+              <label>Tempo (beats per minute)</label>
               <input type="tel" ng-model="presetEditAfter.beatsPerMinute" class="form-control" placeholder="100.0">
             </div>
 
-            <div class="form-group">
-              <label>Time Signature</label>
-              <select ng-model="presetEditAfter.beatsPerMeasure" class="form-control">
-                <option value="4">4/4</option>
-                <option value="3">3/4</option>
-                <option value="2">2/4</option>
-                <option value="no-emphasis">No Emphasis</option>
-              </select>
-            </div>
+            <div class="row">
+              <div class="col-xs-6">
+                <div class="form-group">
+                  <label>Time Signature</label>
+                  <select ng-model="presetEditAfter.beatsPerMeasure" class="form-control">
+                    <option value="4">4/4</option>
+                    <option value="3">3/4</option>
+                    <option value="2">2/4</option>
+                    <option value="no-emphasis">No Emphasis</option>
+                  </select>
+                </div>
+              </div> <!-- .col-xs-6 -->
 
-            <div class="form-group">
-              <label>Key</label>
-              <select ng-model="presetEditAfter.key" class="form-control">
-                <option value="c">C</option>
-                <option value="c#">C&#9839;</option>
-                <option value="d">D</option>
-                <option value="eb">E&#9837;</option>
-                <option value="e">E</option>
-                <option value="f">F</option>
-                <option value="f#">F&#9839;</option>
-                <option value="g">G</option>
-                <option value="ab">A&#9837;</option>
-                <option value="a">A</option>
-                <option value="bb">B&#9837;</option>
-                <option value="b">B</option>
-                <!-- <option value="tock">Tock</option> -->
-              </select>
-            </div>
-          </div>
+              <div class="col-xs-6">
+                <div class="form-group">
+                  <label>Key</label>
+                  <select ng-model="presetEditAfter.key" class="form-control">
+                    <option value="c">C</option>
+                    <option value="c#">C&#9839;</option>
+                    <option value="d">D</option>
+                    <option value="eb">E&#9837;</option>
+                    <option value="e">E</option>
+                    <option value="f">F</option>
+                    <option value="f#">F&#9839;</option>
+                    <option value="g">G</option>
+                    <option value="ab">A&#9837;</option>
+                    <option value="a">A</option>
+                    <option value="bb">B&#9837;</option>
+                    <option value="b">B</option>
+                    <!-- <option value="tock">Tock</option> -->
+                  </select>
+                </div>
+              </div> <!-- .col-xs-6 -->
+            </div> <!-- .row -->
+          </div> <!-- .modal-body -->
 
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
