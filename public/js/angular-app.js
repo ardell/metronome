@@ -206,6 +206,24 @@ app.directive('selectOnClick', function() {
   };
 });
 
+app.directive('onSwipeLeftAddClass', function() {
+  return {
+    restrict: 'A',
+    scope: { 'onSwipeLeftAddClass': '@' },
+    link: function(scope, element, attr) {
+      var $el = jQuery(element);
+      $el.on('swipeleft', function() {
+        $el.addClass(scope.onSwipeLeftAddClass);
+        jQuery('body').one('touchstart', function() {
+          setTimeout(function() {
+            $el.removeClass(scope.onSwipeLeftAddClass);
+          }, 500);
+        });
+      });
+    }
+  };
+});
+
 app.directive('muteSwitch', function() {
   return {
     restrict: 'A',
@@ -248,8 +266,8 @@ app.controller('AddPresetController', function($scope) {
   });
 
   $scope.addPreset = function() {
-    $scope.presets = $scope.presets || [];
-    $scope.presets.push({
+    $scope.$parent.presets = $scope.$parent.presets || [];
+    $scope.$parent.presets.push({
       title:           $scope.newTitle,
       beatsPerMinute:  $scope.newBeatsPerMinute,
       beatsPerMeasure: $scope.newBeatsPerMeasure,
@@ -287,8 +305,16 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
           $scope.beatsPerMeasure = data.beatsPerMeasure;
           $scope.key             = data.key;
           $scope.muted           = data.muted;
-          $scope.presets         = data.presets;
+          $scope.presets         = [];
           $scope.startTime       = data.startTime;
+          _.each(data.presets, function(preset) {
+            $scope.presets.push({
+              title:           preset.title,
+              key:             preset.key,
+              beatsPerMinute:  preset.beatsPerMinute,
+              beatsPerMeasure: preset.beatsPerMeasure
+            });
+          });
         });
       }
     });
@@ -301,6 +327,13 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     $scope.beatsPerMinute  = preset.beatsPerMinute;
     $scope.beatsPerMeasure = preset.beatsPerMeasure;
     $scope.startTime       = serverTime;
+    $(window).trigger('settings:change');
+  }
+
+  $scope.deletePreset = function(preset) {
+    var index = $scope.presets.indexOf(preset);
+    if (index < 0) return;
+    $scope.presets.splice(index, 1);
     $(window).trigger('settings:change');
   }
 

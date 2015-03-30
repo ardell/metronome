@@ -79,6 +79,24 @@ body {
   margin-left: -20px;
 }
 
+.nav-sidebar .actions {
+  vertical-align: middle;
+  line-height: 39px;
+  margin-right: 15px;
+  text-align: right;
+  position: relative;
+  z-index: 1;
+  display: none;
+}
+
+html.no-touch .nav-sidebar li:hover .actions {
+  display: inline;
+}
+
+html.touch .nav-sidebar li.swiped:hover .actions {
+  display: inline;
+}
+
 .nav-sidebar li.empty { padding: 0 15px; }
 
 #show-page #tap-control {
