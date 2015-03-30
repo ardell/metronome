@@ -55,6 +55,15 @@ body {
   margin-left:  -15px;
 }
 
+/* Until we can get it styled appropriately for mobile */
+.sidebar { display: none; }
+
+.metronome-body {
+  max-width: 446px;
+  margin: auto;
+  margin-top: 20px;
+}
+
 @media (min-width: 768px) {
   .sidebar {
     position: fixed;
@@ -83,6 +92,8 @@ body {
     margin-bottom: 20px;
     margin-left:  -20px;
   }
+
+  .metronome-body { margin-top: 0; }
 }
 
 .nav-sidebar > li { border-top: 1px solid #ddd; }
