@@ -115,9 +115,9 @@ html.touch .nav-sidebar li.swiped:hover .actions {
 }
 
 #show-page #tap-control {
-  width: 300px;
-  height: 300px;
-  border-radius: 150px;
+  width: 260px;
+  height: 260px;
+  border-radius: 130px;
   border: 2px solid #555;
   display: inline-block;
   overflow: hidden;
@@ -153,7 +153,7 @@ html.touch .nav-sidebar li.swiped:hover .actions {
   text-decoration: none;
   background-color: #444;
   height: 100%;
-  line-height: 155pt;
+  line-height: 116pt;
   font-size: 24pt;
   text-transform: uppercase;
   text-align: center;
@@ -193,8 +193,8 @@ html.touch #show-page #tap-control #tap-button.active {
 
 #tap-wrapper {
   position: relative;
-  width:    330px;
-  height:   330px;
+  width:    290px;
+  height:   290px;
   margin:   auto;
 }
 #tap-wrapper #tap-control {
@@ -204,8 +204,8 @@ html.touch #show-page #tap-control #tap-button.active {
   z-index: 1;
 }
 #tap-wrapper .arcs {
-  width: 330px;
-  height: 330px;
+  width: 290px;
+  height: 290px;
   position: absolute;
   left: 0;
   top: 0;
