@@ -3,11 +3,15 @@ require 'bundler/setup'
 require 'sinatra'
 require 'json'
 require 'sinatra/form_helpers'
+require 'sinatra/cookies'
 
 module Metronome
   class App < Sinatra::Base
-    set :public_folder, File.dirname(__FILE__) + '/public'
     helpers Sinatra::FormHelpers
+    helpers Sinatra::Cookies
+
+    set :public_folder, File.dirname(__FILE__) + '/public'
+    set :cookie_options, expires: Time.now+(60*60*24*365*10)  # 10 years from now
 
     get '/' do
       erb :index, layout: :layout
@@ -41,10 +45,26 @@ module Metronome
 
       # Create the metronome in Redis
       metronome = MetronomeConfig.new(slug, params['email'])
+      token     = metronome.invite(params['email'], :owner)
       redis.set(slug, metronome.to_json)
 
+      # TODO: send user an email including the token
+
       # Redirect to it
-      redirect to("/#{slug}")
+      redirect to("/#{slug}/#{token}")
+    end
+
+    get '/:slug/:token' do
+      # Check slug/token against redis, 404 unless match
+      slug        = params['slug']
+      redis       = _get_redis
+      config_json = redis.get(slug)
+      raise Sinatra::NotFound unless config_json
+
+      # Set cookie
+      cookies["metronome_token_#{slug}"] = params['token']
+
+      redirect to("/#{params['slug']}")
     end
 
     get '/:slug' do
@@ -53,6 +73,13 @@ module Metronome
       redis       = _get_redis
       config_json = redis.get(slug)
       raise Sinatra::NotFound unless config_json
+
+      # Check cookie to make sure user can view this slug
+      token = cookies["metronome_token_#{slug}"]
+      metronome = MetronomeConfig.from_json(config_json)
+      unless metronome.isPublic or metronome.invitees.has_key?(token)
+        raise Sinatra::NotFound
+      end
 
       erb :show, layout: :layout
     end

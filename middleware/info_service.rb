@@ -14,6 +14,8 @@ class MetronomeConfig
   attr_accessor :muted
   attr_accessor :presets
   attr_accessor :clients
+  attr_accessor :invitees
+  attr_accessor :isPublic
   attr_accessor :startTime
 
   def initialize(slug, email)
@@ -25,7 +27,20 @@ class MetronomeConfig
     @muted           = false
     @presets         = []
     @clients         = []
+    @invitees        = {}
+    @isPublic        = true
     @startTime       = Time.now.to_f
+  end
+
+  def invite(email, role)
+    # Generate a unique token
+    token = SecureRandom.hex
+    while @invitees.has_key?(token)
+      token = SecureRandom.hex
+    end
+
+    @invitees[token] = { email: email, role: role }
+    token
   end
 
   def to_h
@@ -38,12 +53,33 @@ class MetronomeConfig
       muted:           @muted,
       presets:         @presets,
       clients:         @clients,
+      invitees:        @invitees,
+      isPublic:        @isPublic,
       startTime:       @startTime,
     }
   end
 
   def to_json
     to_h.to_json
+  end
+
+  def public_h
+    {
+      slug:            @slug,
+      email:           @email,
+      beatsPerMinute:  @beatsPerMinute,
+      beatsPerMeasure: @beatsPerMeasure,
+      key:             @key,
+      muted:           @muted,
+      presets:         @presets,
+      clients:         @clients,
+      isPublic:        @isPublic,
+      startTime:       @startTime,
+    }
+  end
+
+  def public_json
+    public_h.to_json
   end
 
   def self.from_json(json)
@@ -55,6 +91,8 @@ class MetronomeConfig
     metronome.muted           = hash['muted']
     metronome.presets         = hash['presets'] || []
     metronome.clients         = hash['clients'] || []
+    metronome.invitees        = hash['invitees'] || {}
+    metronome.isPublic        = hash['isPublic']
     metronome.startTime       = hash['startTime']
     metronome
   end
@@ -110,14 +148,14 @@ module Metronome
 
         # Make sure the client passed us a slug
         unless hash.has_key?('slug')
-          return puts "Please specify the slug you wish to connect to."
+          next puts "Please specify the slug you wish to connect to."
         end
         slug = hash['slug']
 
         # Set up the MetronomeConfig if it doesn't already exist in Redis
         config_json = @redis.get(slug)
         unless config_json
-          return puts "Could not find an active metronome with that slug."
+          next puts "Could not find an active metronome with that slug."
         end
         metronome = MetronomeConfig.from_json(config_json)
 
@@ -132,7 +170,7 @@ module Metronome
         @clients[slug] << ws
 
         # Send the current info to the client
-        ws.send metronome.to_json
+        ws.send metronome.public_json
       end
 
       ws.on :message do |event|
@@ -140,18 +178,44 @@ module Metronome
         hash = Rack::Utils.parse_nested_query(querystring)
 
         unless hash.has_key?('slug')
-          return puts "No slug specified for message."
+          puts "No slug specified for message."
+          next ws.send metronome.public_json
         end
         slug = hash['slug']
 
         # Pull the existing metronome from Redis
         config_json = @redis.get(slug)
         unless config_json
-          return puts "Metronome not found for slug: #{slug}."
+          puts "Metronome not found for slug: #{slug}."
+          next ws.send metronome.public_json
         end
         metronome = MetronomeConfig.from_json(config_json)
         unless metronome
-          return puts "Could not parse metronome config for: #{slug}."
+          puts "Could not parse metronome config for: #{slug}."
+          next ws.send metronome.public_json
+        end
+
+        # Make sure the user is an authorized :owner or :maestro
+        # TODO: Implement CSRF protection, see: http://faye.jcoglan.com/security/csrf.html
+        unless event.current_target.env.has_key?('HTTP_COOKIE')
+          puts "User doesn't have any cookies--can't be an editor."
+          next ws.send metronome.public_json
+        end
+        cookies    = CGI::Cookie::parse(event.current_target.env['HTTP_COOKIE'])
+        cookie_key = "metronome_token_#{slug}"
+        unless cookies.has_key?(cookie_key)
+          puts "User doesn't have a cookie for #{cookie_key}--can't be an editor."
+          next ws.send metronome.public_json
+        end
+        token = cookies[cookie_key].value.to_s.split(';').first.split('=').last
+        unless metronome.invitees.has_key?(token)
+          puts "Token #{token} isn't authorized on metronome #{slug}."
+          next ws.send metronome.public_json
+        end
+        invitee = metronome.invitees[token]
+        unless invitee['role'] == 'owner' or invitee['role'] == 'maestro'
+          puts "User #{invitee['email']} is #{invitee['role']}, not :owner/:maestro, so they can't make edits."
+          next ws.send metronome.public_json
         end
 
         # Make the change
@@ -169,7 +233,7 @@ module Metronome
 
         puts "Updated metronome '#{slug}' to: #{metronome.to_json}"
 
-        ws.send metronome.to_json
+        ws.send metronome.public_json
       end
 
       ws.on :close do |event|
@@ -179,21 +243,17 @@ module Metronome
             @clients[slug].delete(ws)
 
             # Got the slug
-            begin
-              config_json = @redis.get(slug)
-              unless config_json
-                return puts "Metronome not found for slug: #{slug}."
-              end
-              metronome = MetronomeConfig.from_json(config_json)
-              unless metronome
-                return puts "Could not parse metronome config for: #{slug}."
-              end
-              metronome.clients.pop
-              @redis.set(slug, metronome.to_json)
-              @redis.publish(CHANNEL, metronome.to_json)
-            rescue => e
-              puts e.inspect
+            config_json = @redis.get(slug)
+            unless config_json
+              next puts "Metronome not found for slug: #{slug}."
             end
+            metronome = MetronomeConfig.from_json(config_json)
+            unless metronome
+              next puts "Could not parse metronome config for: #{slug}."
+            end
+            metronome.clients.pop
+            @redis.set(slug, metronome.to_json)
+            @redis.publish(CHANNEL, metronome.to_json)
           end
         end
       end

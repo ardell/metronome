@@ -6,4 +6,5 @@ gem "sinatra"
 gem "faye-websocket"
 gem "redis"
 gem "sinatra-formhelpers-ng"
+gem "sinatra-contrib"
 
