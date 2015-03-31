@@ -339,6 +339,9 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   var syncResult = TimeSynchronizationFactory.getOffset();
   syncResult.then(function(val) { $scope.offset = val; });
 
+  // We won't record any changes until settings are loaded from the server
+  var sendChangesToServer = false;
+
   // Query server for tempo, time sig, and start time via websockets (and set up handlers for when new data comes through)
   $scope.beatsPerMinute  = null;
   $scope.beatsPerMeasure = null;
@@ -358,6 +361,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
       onmessage: function(message) {
         data = $.parseJSON(message.data);
         $scope.$apply(function() {
+          sendChangesToServer    = false;
           $scope.beatsPerMinute  = data.beatsPerMinute;
           $scope.beatsPerMeasure = data.beatsPerMeasure;
           $scope.key             = data.key;
@@ -373,6 +377,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
               beatsPerMeasure: preset.beatsPerMeasure
             });
           });
+          setTimeout(function() { sendChangesToServer = true; }, 0);
         });
       }
     });
@@ -381,6 +386,23 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
 
   $scope.loadPreset = function(preset) {
     var serverTime         = getServerTime($scope.offset);
+
+    // Don't do anything unless something's different
+    var oldHash = {
+      key:             $scope.key,
+      beatsPerMinute:  $scope.beatsPerMinute,
+      beatsPerMeasure: $scope.beatsPerMeasure,
+      startTime:       $scope.startTime
+    }
+    var newHash = {
+      key:             preset.key,
+      beatsPerMinute:  preset.beatsPerMinute,
+      beatsPerMeasure: preset.beatsPerMeasure,
+      startTime:       preset.startTime
+    }
+    if (angular.equals(oldHash, newHash)) return;
+
+    // Otherwise, make the changes
     $scope.key             = preset.key;
     $scope.beatsPerMinute  = preset.beatsPerMinute;
     $scope.beatsPerMeasure = preset.beatsPerMeasure;
@@ -421,6 +443,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
 
   $scope.frequencies = [ 880.000, 440.000 ];  // hz
   $scope.$watch('key', function(newValue, oldValue) {
+    if (!sendChangesToServer) return;
     if (angular.equals(newValue, oldValue)) return;
     if (angular.isUndefined(newValue)) return;
     switch($scope.key) {
@@ -448,6 +471,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   });
 
   $scope.$watch('beatsPerMeasure', function(newValue, oldValue) {
+    if (!sendChangesToServer) return;
     if (angular.equals(newValue, oldValue)) return;
     if (angular.isUndefined(newValue)) return;
     if (oldValue == null) return;
@@ -455,6 +479,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   });
 
   $scope.$watch('muted', function(newValue, oldValue) {
+    if (!sendChangesToServer) return;
     if (angular.equals(newValue, oldValue)) return;
     if (angular.isUndefined(newValue)) return;
     if (oldValue == null) return;
@@ -462,6 +487,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   });
 
   $scope.$watch('presets', function(newValue, oldValue) {
+    if (!sendChangesToServer) return;
     if (angular.equals(newValue, oldValue)) return;
     if (angular.isUndefined(newValue)) return;
     if (oldValue == null) return;
@@ -493,7 +519,12 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
       var differences          = calculateDiff(recentTaps);
       var medianSecondsPerBeat = median(differences);
       var beatsPerMinute       = Math.round(60.0 / medianSecondsPerBeat * 10.0) / 10.0;
-      $scope.beatsPerMinute    = beatsPerMinute;
+
+      // Return unless something is different
+      if ($scope.beatsPerMinute == beatsPerMinute) return;
+
+      // Make the change and save to server
+      $scope.beatsPerMinute = beatsPerMinute;
       $(window).trigger('settings:change');
     });
   };
