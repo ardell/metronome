@@ -24,13 +24,22 @@ app.factory('WebSocketFactory', function($q) {
   return {
     create: function(hash) {
       var uri      = hash.uri;
-      var deferred = $q.defer();
+      var deferred = null;
       var ws       = null;
 
-      ws         = new WebSocket(uri);
-      ws.onopen  = function() { deferred.resolve(ws); }
-      ws.onerror = function() { deferred.reject(ws);  }
-      if ('onmessage' in hash) ws.onmessage = hash.onmessage;
+      var connect = function() {
+        deferred   = $q.defer();
+        ws         = new WebSocket(uri);
+        ws.onopen  = function() { deferred.resolve(ws); }
+        ws.onerror = function() { deferred.reject(ws);  }
+        ws.onclose = function() {
+          if (!hash.autoReconnect) return;
+          // TODO: Improve our method of re-connecting
+          setTimeout(function() { connect(); }, 1000);
+        }
+        if ('onmessage' in hash) ws.onmessage = hash.onmessage;
+      }
+      connect();
 
       return deferred.promise;
     }
@@ -344,7 +353,8 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     var slug = window.location.pathname.substring(1);
     var uri  = "ws://" + window.document.location.host + "/info?slug=" + slug;
     var ws   = WebSocketFactory.create({
-      uri:       uri,
+      uri: uri,
+      autoReconnect: true,
       onmessage: function(message) {
         data = $.parseJSON(message.data);
         $scope.$apply(function() {
