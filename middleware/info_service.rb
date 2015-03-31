@@ -7,6 +7,7 @@ class MetronomeConfig
   include Observable
 
   attr_accessor :slug
+  attr_accessor :email
   attr_accessor :beatsPerMinute
   attr_accessor :beatsPerMeasure
   attr_accessor :key
@@ -15,8 +16,9 @@ class MetronomeConfig
   attr_accessor :clients
   attr_accessor :startTime
 
-  def initialize(slug)
+  def initialize(slug, email)
     @slug            = slug
+    @email           = email
     @beatsPerMinute  = 100
     @beatsPerMeasure = 4
     @key             = 'a'
@@ -29,6 +31,7 @@ class MetronomeConfig
   def to_h
     {
       slug:            @slug,
+      email:           @email,
       beatsPerMinute:  @beatsPerMinute,
       beatsPerMeasure: @beatsPerMeasure,
       key:             @key,
@@ -45,7 +48,7 @@ class MetronomeConfig
 
   def self.from_json(json)
     hash                      = JSON.parse(json)
-    metronome                 = self.new(hash['slug'])
+    metronome                 = self.new(hash['slug'], hash['email'])
     metronome.beatsPerMinute  = hash['beatsPerMinute']
     metronome.beatsPerMeasure = hash['beatsPerMeasure']
     metronome.key             = hash['key']
@@ -113,12 +116,10 @@ module Metronome
 
         # Set up the MetronomeConfig if it doesn't already exist in Redis
         config_json = @redis.get(slug)
-        if config_json
-          metronome = MetronomeConfig.from_json(config_json)
-        else
-          metronome = MetronomeConfig.new(slug)
-          puts "Created new metronome with slug: '#{slug}'."
+        unless config_json
+          return puts "Could not find an active metronome with that slug."
         end
+        metronome = MetronomeConfig.from_json(config_json)
 
         # Add this user to the list of clients for this metronome
         metronome.clients << 'one'

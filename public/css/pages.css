@@ -2,13 +2,9 @@
  * All pages
  ***/
 
-body, html {
-  overflow: hidden;
-}
-
 body {
   margin: 0;
-  padding: 71px 0 0 0;
+  padding: 51px 0 0 0;
 }
 
 /***
@@ -24,6 +20,8 @@ body {
 
 #show-page {
   height: 100%;
+  overflow: hidden;
+  padding: 71px 0 0 0;
 }
 
 .navbar-item {

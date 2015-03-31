@@ -1,13 +1,83 @@
-<div ng-controller="IndexController">
-  <h1>Create a metronome</h1>
+<nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <!--
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      -->
+      <a class="navbar-brand" href="#">Shared Metronome</a>
+    </div>
 
-  <div>
-    <label>What should we call your metronome?</label>
-    <input type="text" placeholder="john-smith" ng-model="slug" autofocus>
+    <div id="navbar" class="navbar-collapse collapse">
+      <!--
+      <form class="navbar-form navbar-right">
+        <div class="form-group">
+          <input type="text" placeholder="Email" class="form-control">
+        </div>
+        <div class="form-group">
+          <input type="password" placeholder="Password" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-success">Sign in</button>
+      </form>
+      -->
+    </div><!--/.navbar-collapse -->
+  </div>
+</nav>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>Keep everyone in sync.</h1>
+    <p>
+      Share a click track with your entire band/ensemble using just their
+      mobile phones/tablets.
+    </p>
+    <p><a class="btn btn-primary btn-lg" href="#" role="button">Sign me up!</a></p>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Example row of columns -->
+  <div class="row">
+    <div class="col-md-4">
+      <h2><i class="glyphicon glyphicon-refresh"></i> Synchronized</h2>
+      <p>
+        Each client is synchronized in real-time over the web. Changes in key or
+        tempo are sent nearly instantaneously to each client so everyone stays
+        on the same beat. Connect using any device, no apps or extra hardware
+        required.
+      </p>
+      <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
+    </div>
+
+    <div class="col-md-4">
+      <h2><i class="glyphicon glyphicon-list"></i> Presets</h2>
+      <p>
+        Performing a set list of songs? Switch between different tempos and key
+        signatures with a single tap.
+      </p>
+      <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
+    </div>
+
+    <div class="col-md-4">
+      <h2><i class="glyphicon glyphicon-user"></i> Sharing</h2>
+      <p>
+        Invite multiple maestros to your metronome&mdash;each can change the
+        tempo and key or load presets at any time. Or share read-only with
+        musicians who don't need to make changes. Optionally share your
+        metronome publicly by URL for easy collaboration.
+      </p>
+      <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
+    </div>
   </div>
 
-  <p ng-show="!!slug">
-    Your metronome is located at <a href="{{url()}}">{{url()}}</a>
-  </p>
-</div>
+  <hr>
+
+  <footer>
+    <p>&copy; Agile Engineering LLC <%= Time.now.year %></p>
+  </footer>
+</div> <!-- /container -->
 

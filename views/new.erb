@@ -1,0 +1,114 @@
+<nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">Shared Metronome</a>
+    </div>
+
+    <div id="navbar" class="navbar-collapse collapse">
+    </div><!--/.navbar-collapse -->
+  </div>
+</nav>
+
+<script>
+// Initialize metronome attributes
+window.metronome = <%= JSON.generate(@metronome) %>;
+</script>
+
+<div class="container">
+  <div id="new-page" ng-controller="NewController">
+    <h2>Create a Metronome</h2>
+    <div class="row">
+      <div class="col-sm-6">
+        <%= form('/create', :post, { name: 'new' }) %>
+          <div ng-class="{ 'form-group': true, 'has-success': (new.title.$dirty && new.title.$valid), 'has-error': (new.title.$dirty && new.title.$invalid), 'has-feedback': new.title.$dirty }">
+            <label class="control-label">Metronome Name</label>
+            <%= input :title, nil, {
+              :class                    => 'form-control',
+              :id                       => 'title',
+              'ng-model'.to_sym         => 'metronome.title',
+              :placeholder              => 'The Beatles',
+              'aria-describedby'.to_sym => 'title-status',
+              :required                 => true,
+              :autofocus                => true,
+            } %>
+            <span class="glyphicon glyphicon-ok form-control-feedback"     ng-show="new.title.$dirty && new.title.$valid" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-remove form-control-feedback" ng-show="new.title.$dirty && new.title.$invalid" aria-hidden="true"></span>
+            <small>Shown at the top of your metronome so everyone knows they're in the right place.</small>
+            <div id="title-status" class="alert alert-danger" ng-show="new.title.$dirty && new.title.$invalid">
+              <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+              <span class="sr-only">Please enter a name for your metronome.</span>
+              Please enter a name for your metronome.
+            </div>
+          </div>
+
+          <div ng-class="{ 'form-group': true, 'has-success': ((metronome.slug || new.slug.$dirty) && new.slug.$valid), 'has-error': ((metronome.slug || new.slug.$dirty) && new.slug.$invalid), 'has-feedback': (metronome.slug || new.slug.$dirty) }">
+            <label class="control-label">URL</label>
+            <div class="input-group">
+              <div class="input-group-addon">www.shared-metronome.com/</div>
+              <%= input :slug, nil, {
+                :class                    => 'form-control',
+                :id                       => 'slug',
+                'ng-model'.to_sym         => 'metronome.slug',
+                :placeholder              => 'the-beatles',
+                'aria-describedby'.to_sym => 'slug-status',
+                :required                 => true,
+                :value                    => '{{calculateSlug()}}',
+                'replace-input'.to_sym    => '[^a-z0-9]+',
+                'ng-trim'.to_sym          => false,
+                'ng-pattern'.to_sym       => "/^[a-z0-9\-]*$/",
+              } %>
+            </div>
+            <span class="glyphicon glyphicon-ok form-control-feedback"     ng-show="(metronome.slug || new.slug.$dirty) && new.slug.$valid" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-remove form-control-feedback" ng-show="(metronome.slug || new.slug.$dirty) && new.slug.$invalid" aria-hidden="true"></span>
+            <small>The URL where musicians can connect to your metronome.</small>
+            <% if @slug_error %>
+              <div id="slug-taken" class="alert alert-danger" ng-show="(!new.slug.$dirty)">
+                <%= @slug_error %>
+              </div>
+            <% end %>
+            <div id="slug-status" class="alert alert-danger" ng-show="(metronome.slug || new.slug.$dirty) && new.slug.$invalid">
+              <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+              <span ng-show="new.slug.$error.pattern" class="sr-only">Please use only lowercase letters, numbers, and dashes.</span>
+              <span ng-show="new.slug.$error.pattern">Please use only lowercase letters, numbers, and dashes.</span>
+              <span ng-show="new.slug.$error.required" class="sr-only">This field is required.</span>
+              <span ng-show="new.slug.$error.required">This field is required.</span>
+            </div>
+          </div>
+
+          <div ng-class="{ 'form-group': true, 'has-success': (new.email.$dirty && !new.email.$empty && new.email.$valid), 'has-error': (new.email.$dirty && new.email.$invalid), 'has-feedback': new.email.$dirty }">
+            <label class="control-label">Your Email</label>
+            <div class="input-group">
+              <span class="input-group-addon">@</span>
+              <%= input :email, nil, {
+                :type                     => 'email',
+                :class                    => 'form-control',
+                :id                       => 'email',
+                'ng-model'.to_sym         => 'metronome.email',
+                :placeholder              => 'ringo@the-beatles.com',
+                'aria-describedby'.to_sym => 'email-status',
+                :required                 => true,
+              } %>
+            </div>
+            <span class="glyphicon glyphicon-ok form-control-feedback" ng-show="new.email.$dirty && new.email.$valid" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-remove form-control-feedback" ng-show="new.email.$dirty && new.email.$invalid" aria-hidden="true"></span>
+            <small>We'll send you the admin link to your metronome so you can edit it any time you want.</small>
+            <div id="email-status" class="alert alert-danger" ng-show="new.email.$dirty && new.email.$invalid">
+              <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+              <span class="sr-only">Please enter a valid email address.</span>
+              Please enter a valid email address.
+            </div>
+          </div>
+
+          <div class="form-group form-inline">
+            <input type="submit" class="form-control btn btn-primary" value="Save">
+          </div>
+        <!-- /form -->
+      </div> <!-- .col-sm-6 -->
+
+      <div class="col-sm-6">
+        <!-- nothing here -->
+      </div>
+  </div> <!-- #new-page -->
+</div> <!-- .container -->
+
+

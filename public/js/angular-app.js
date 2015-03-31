@@ -261,6 +261,29 @@ app.directive('muteSwitch', function() {
   };
 });
 
+app.directive('replaceInput', function(){
+  return {
+    restrict: 'A',
+    require: 'ngModel',
+    link: function(scope, element, attrs, modelCtrl) {
+      if (!attrs['replaceInput']) throw new Exception("Please specify a regex as the content of replace-input, e.g. <input replace-input='/[a-zA-Z0-9]/g'>");
+      var regex           = new RegExp(attrs['replaceInput'], 'g');
+      var replacementChar = attrs['with'] || '-';
+      modelCtrl.$parsers.push(jQuery.proxy(function(regex, replacementChar, inputValue) {
+        if (!inputValue) return '';
+        var transformedInput = inputValue.toLowerCase().replace(regex, replacementChar);
+
+        if (transformedInput!=inputValue) {
+          modelCtrl.$setViewValue(transformedInput);
+          modelCtrl.$render();
+        }
+
+        return transformedInput;
+      }, this, regex, replacementChar));
+    }
+  };
+});
+
 app.controller('IndexController', function($scope) {
   $scope.slug = "";
   $scope.url = function() {
@@ -268,6 +291,16 @@ app.controller('IndexController', function($scope) {
     var sanitizedSlug = $scope.slug.trim().toLowerCase().replace(/[^a-z\-]+/, '-');
     return "http://" + window.location.host + "/" + sanitizedSlug;
   };
+}, []);
+
+app.controller('NewController', function($scope) {
+  $scope.metronome = window.metronome || {};
+
+  // Update slug when title changes
+  $scope.$watch('metronome.title', function() {
+    var title = $scope.metronome.title || '';
+    $scope.metronome.slug = title.toLowerCase().trim().replace(/[^a-z0-9\-]+/g, '-');
+  });
 }, []);
 
 app.controller('PresetListController', function($scope) {
