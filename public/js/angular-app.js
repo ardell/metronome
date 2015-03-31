@@ -443,7 +443,6 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
 
   $scope.frequencies = [ 880.000, 440.000 ];  // hz
   $scope.$watch('key', function(newValue, oldValue) {
-    if (!sendChangesToServer) return;
     if (angular.equals(newValue, oldValue)) return;
     if (angular.isUndefined(newValue)) return;
     switch($scope.key) {
@@ -466,6 +465,8 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
       //   break;
       default:     $scope.frequencies = [ 880.000, 440.000 ]; break;
     };
+
+    if (!sendChangesToServer) return;
     if (oldValue == null) return;
     $(window).trigger('settings:change');
   });
