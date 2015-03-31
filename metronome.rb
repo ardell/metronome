@@ -24,8 +24,7 @@ module Metronome
 
     post '/create' do
       # Initialize redis
-      redis   = Redis.new(url: ENV['REDISTOGO_URL'])
-      channel = 'metronome-updates'
+      redis = _get_redis
 
       # Make sure the slug isn't taken
       slug        = params['slug']
@@ -43,14 +42,30 @@ module Metronome
       # Create the metronome in Redis
       metronome = MetronomeConfig.new(slug, params['email'])
       redis.set(slug, metronome.to_json)
-      redis.publish(channel, metronome.to_json)
 
       # Redirect to it
       redirect to("/#{slug}")
     end
 
     get '/:slug' do
+      # Make sure a metronome exists for this slug
+      slug        = params['slug']
+      redis       = _get_redis
+      config_json = redis.get(slug)
+      raise Sinatra::NotFound unless config_json
+
       erb :show, layout: :layout
+    end
+
+    not_found do
+      status 404
+      erb :not_found
+    end
+
+    private
+
+    def _get_redis
+      Redis.new(url: ENV['REDISTOGO_URL'])
     end
   end
 end
