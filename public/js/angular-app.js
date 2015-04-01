@@ -366,7 +366,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   $scope.key             = null;
   $scope.muted           = null;
   $scope.presets         = [];
-  $scope.clients         = [];
+  $scope.connections     = null;
   $scope.startTime       = getServerTime($scope.offset);
   var deferred           = $q.defer();
   var infoWebSocket      = deferred.promise;
@@ -385,7 +385,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
           $scope.key             = data.key;
           $scope.muted           = data.muted;
           $scope.presets         = [];
-          $scope.clients         = data.clients;
+          $scope.connections     = data.connections;
           $scope.startTime       = data.startTime;
           _.each(data.presets, function(preset) {
             $scope.presets.push({

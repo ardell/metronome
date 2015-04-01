@@ -72,7 +72,7 @@ class MetronomeConfig
       key:             @key,
       muted:           @muted,
       presets:         @presets,
-      clients:         @clients,
+      connections:     _connections,
       isPublic:        @isPublic,
       startTime:       @startTime,
     }
@@ -96,6 +96,21 @@ class MetronomeConfig
     metronome.startTime       = hash['startTime']
     metronome
   end
+
+  private
+
+  def _connections
+    # Clients is a list of tokens, turn it into list of user hashes
+    unique_clients = clients.uniq
+    users          = unique_clients.map {|token| invitees[token] }.compact
+    {
+      total:     unique_clients.length,
+      owners:    users.select {|hash| hash['role'] == 'owner' }.length,
+      maestros:  users.select {|hash| hash['role'] == 'maestro' }.length,
+      musicians: users.select {|hash| hash['role'] == 'musician' }.length,
+      anonymous: unique_clients.select {|o| o.nil?}.length,
+    }
+  end
 end
 
 module Metronome
@@ -118,8 +133,17 @@ module Metronome
               obj  = JSON.parse(msg)
               slug = obj['slug']
               next unless @clients.has_key?(slug)
+
+              # Load metronome
+              config_json = @redis.get(slug)
+              unless config_json
+                next puts "Could not find an active metronome with that slug."
+              end
+              metronome = MetronomeConfig.from_json(config_json)
+
+              # Send to connected clients
               @clients[slug].each do |ws|
-                ws.send msg
+                ws.send metronome.public_json
               end
             rescue => e
               puts "error: #{e.inspect}"
@@ -159,8 +183,11 @@ module Metronome
         end
         metronome = MetronomeConfig.from_json(config_json)
 
+        # Get the user's token if they have one
+        token = _get_token(slug, event)
+
         # Add this user to the list of clients for this metronome
-        metronome.clients << 'one'
+        metronome.clients << token
         @redis.set(slug, metronome.to_json)
         @redis.publish(CHANNEL, metronome.to_json)
 
@@ -197,17 +224,11 @@ module Metronome
 
         # Make sure the user is an authorized :owner or :maestro
         # TODO: Implement CSRF protection, see: http://faye.jcoglan.com/security/csrf.html
-        unless event.current_target.env.has_key?('HTTP_COOKIE')
-          puts "User doesn't have any cookies--can't be an editor."
+        token = _get_token(slug, event)
+        unless token
+          puts "User doesn't have a token."
           next ws.send metronome.public_json
         end
-        cookies    = CGI::Cookie::parse(event.current_target.env['HTTP_COOKIE'])
-        cookie_key = "metronome_token_#{slug}"
-        unless cookies.has_key?(cookie_key)
-          puts "User doesn't have a cookie for #{cookie_key}--can't be an editor."
-          next ws.send metronome.public_json
-        end
-        token = cookies[cookie_key].value.to_s.split(';').first.split('=').last
         unless metronome.invitees.has_key?(token)
           puts "Token #{token} isn't authorized on metronome #{slug}."
           next ws.send metronome.public_json
@@ -251,7 +272,8 @@ module Metronome
             unless metronome
               next puts "Could not parse metronome config for: #{slug}."
             end
-            metronome.clients.pop
+            token = _get_token(slug, event)
+            metronome.clients.delete_at(metronome.clients.index(token) || metronome.clients.length)
             @redis.set(slug, metronome.to_json)
             @redis.publish(CHANNEL, metronome.to_json)
           end
@@ -260,6 +282,16 @@ module Metronome
 
       # Return async Rack response
       ws.rack_response
+    end
+
+    def _get_token(slug, event)
+      return nil unless event.current_target.env.has_key?('HTTP_COOKIE')
+
+      cookies    = CGI::Cookie::parse(event.current_target.env['HTTP_COOKIE'])
+      cookie_key = "metronome_token_#{slug}"
+      return nil unless cookies.has_key?(cookie_key)
+
+      cookies[cookie_key].value.to_s.split(';').first.split('=').last
     end
   end
 end
