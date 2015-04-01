@@ -397,7 +397,7 @@ module Metronome
       ws.on :close do |event|
         @clients.each_pair do |slug, clients|
           client_objects = clients.map {|obj| obj[:client] }
-          if client_objects.map {|obj| obj[:client] }.include?(ws)
+          if client_objects.include?(ws)
             puts "Removing disconnected client ##{ws.object_id} from metronome: '#{slug}'."
             index = client_objects.index(ws)
             @clients[slug].delete_at(index)
