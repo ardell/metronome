@@ -27,17 +27,26 @@ app.factory('WebSocketFactory', function($q) {
       var deferred = null;
       var ws       = null;
 
+      // NOTE: We return this facade object to the user so that when we
+      // reconnect they can continue using the same reference instead of having
+      // to deal with refreshing their connection. Use like this...
+      // WebSocketFactory
+      //   .create({ uri: 'http://foo.com/bar' })
+      //   .then(function(ws) { ws.connection.send('hello world'); });  // note use of "ws.connection" on this line
+      var obj = { connection: null };
+
       var connect = function() {
         deferred   = $q.defer();
         ws         = new WebSocket(uri);
-        ws.onopen  = function() { deferred.resolve(ws); }
-        ws.onerror = function() { deferred.reject(ws);  }
+        ws.onopen  = function() { deferred.resolve(obj); }
+        ws.onerror = function() { deferred.reject(obj);  }
         ws.onclose = function() {
           if (!hash.autoReconnect) return;
           // TODO: Improve our method of re-connecting
           setTimeout(function() { connect(); }, 1000);
         }
         if ('onmessage' in hash) ws.onmessage = hash.onmessage;
+        obj.connection = ws;
       }
       connect();
 
@@ -54,7 +63,7 @@ app.factory('TimeSynchronizationFactory', function(WebSocketFactory, $q) {
 
       var deferred = $q.defer();
       ws.then(
-        function(connection) {  // success
+        function(obj) {  // success
           // Send N pings in a row and take the median offset
           var MEASUREMENTS     = 10;
           var results          = [];
@@ -62,9 +71,9 @@ app.factory('TimeSynchronizationFactory', function(WebSocketFactory, $q) {
 
           function sendPing() {
             requestStartTime = window.performance.now() / 1000.0;
-            connection.send(requestStartTime);
+            obj.connection.send(requestStartTime);
           };
-          connection.onmessage = function(message) {
+          obj.connection.onmessage = function(message) {
             data = $.parseJSON(message.data);
             var serverReportedOffset   = data.offset;
             var requestEndTime         = window.performance.now() / 1000.0;
@@ -83,7 +92,7 @@ app.factory('TimeSynchronizationFactory', function(WebSocketFactory, $q) {
                 results = [];
                 sendPing();
               } else {
-                connection.close();
+                obj.connection.close();
                 var offset = median(results);
                 deferred.resolve(offset);
               }
@@ -568,10 +577,11 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     window.MUTED = true;
   });
 
-  // Set up a watch such that when tempo/time sig/start time change, they are sent to the server via websocket
+  // Set up a watch such that when tempo/time sig/start time change, they are
+  // sent to the server via websocket
   infoWebSocket.then(function(ws) {
     $(window).on('settings:change', function() {
-      ws.send(JSON.stringify({
+      ws.connection.send(JSON.stringify({
         beatsPerMinute:  $scope.beatsPerMinute,
         beatsPerMeasure: $scope.beatsPerMeasure,
         key:             $scope.key,
