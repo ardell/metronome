@@ -50,6 +50,22 @@ class MetronomeConfig
     token
   end
 
+  def update_invitees(invitee_list)
+    invitee_list.each do |invitee_hash|
+      invitee_record = @invitees.values.find {|obj| obj['email'] == invitee_hash['email'] }
+      if invitee_record
+        # Update the existing record
+        invitee_token  = @invitees.key(invitee_record)
+        @invitees[invitee_token]['role'] = invitee_hash['role']
+      else
+        # Invite the user
+        invite(invitee_hash['email'], invitee_hash['role'])
+      end
+
+      # TODO: delete users not in the invitee list
+    end
+  end
+
   def to_h
     {
       slug:            @slug,
@@ -356,7 +372,8 @@ module Metronome
 
         # Permit certain changes only if user is an owner
         if invitee['role'] == MetronomeConfig::ROLE_OWNER
-          metronome.isPublic = hash['isPublic'] if hash.has_key?('isPublic')
+          metronome.isPublic = hash['isPublic']       if hash.has_key?('isPublic')
+          metronome.update_invitees(hash['invitees']) if hash.has_key?('invitees')
         end
 
         # Update redis (which will tell all the other clients)

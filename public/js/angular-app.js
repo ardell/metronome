@@ -344,9 +344,16 @@ app.controller('SharingController', function($scope) {
     $scope.newInvitee = { email: '', role: 'maestro' };
   }
   $scope.save = function() {
+    // Add new invitee if there's a valid email
+    if ($scope.newInvitee.email && $scope.form.new.$valid) {
+      $scope.addNewInvitee();
+    }
+
+    // Persist changes
     $scope.$parent.isPublic = $scope.isPublicEditAfter;
     $scope.$parent.invitees = $scope.inviteesEditAfter;
     $(window).trigger('settings:change');
+
     $scope.dismissModal();
   };
   $scope.dismissModal = function() {
