@@ -6,6 +6,10 @@ require 'observer'
 class MetronomeConfig
   include Observable
 
+  ROLE_OWNER    = 'owner'
+  ROLE_MAESTRO  = 'maestro'
+  ROLE_MUSICIAN = 'musician'
+
   attr_accessor :slug
   attr_accessor :email
   attr_accessor :beatsPerMinute
@@ -39,7 +43,10 @@ class MetronomeConfig
       token = SecureRandom.hex
     end
 
-    @invitees[token] = { email: email, role: role }
+    @invitees[token] = {
+      'email' => email,
+      'role'  => role
+    }
     token
   end
 
@@ -63,8 +70,30 @@ class MetronomeConfig
     to_h.to_json
   end
 
-  def logged_in_h
+  def owner_h
     {
+      role:            ROLE_OWNER,
+      slug:            @slug,
+      email:           @email,
+      beatsPerMinute:  @beatsPerMinute,
+      beatsPerMeasure: @beatsPerMeasure,
+      key:             @key,
+      muted:           @muted,
+      presets:         @presets,
+      connections:     _connections_for_logged_in_user,
+      invitees:        @invitees.values,
+      isPublic:        @isPublic,
+      startTime:       @startTime,
+    }
+  end
+
+  def owner_json
+    owner_h.to_json
+  end
+
+  def maestro_h
+    {
+      role:            ROLE_MAESTRO,
       slug:            @slug,
       email:           @email,
       beatsPerMinute:  @beatsPerMinute,
@@ -78,8 +107,28 @@ class MetronomeConfig
     }
   end
 
-  def logged_in_json
-    logged_in_h.to_json
+  def maestro_json
+    maestro_h.to_json
+  end
+
+  def musician_h
+    {
+      role:            ROLE_MUSICIAN,
+      slug:            @slug,
+      email:           @email,
+      beatsPerMinute:  @beatsPerMinute,
+      beatsPerMeasure: @beatsPerMeasure,
+      key:             @key,
+      muted:           @muted,
+      presets:         @presets,
+      connections:     _connections_for_logged_in_user,
+      isPublic:        @isPublic,
+      startTime:       @startTime,
+    }
+  end
+
+  def musician_json
+    musician_h.to_json
   end
 
   def public_h
@@ -123,9 +172,9 @@ class MetronomeConfig
     anonymous_users  = clients.select {|o| o.nil?}
     {
       total:     identified_users.length + anonymous_users.length,
-      owners:    identified_users.select {|hash| hash['role'] == 'owner' }.map {|hash| hash['email'] },
-      maestros:  identified_users.select {|hash| hash['role'] == 'maestro' }.map {|hash| hash['email'] },
-      musicians: identified_users.select {|hash| hash['role'] == 'musician' }.map {|hash| hash['email'] },
+      owners:    identified_users.select {|hash| hash['role'] == ROLE_OWNER    }.map {|hash| hash['email'] },
+      maestros:  identified_users.select {|hash| hash['role'] == ROLE_MAESTRO  }.map {|hash| hash['email'] },
+      musicians: identified_users.select {|hash| hash['role'] == ROLE_MUSICIAN }.map {|hash| hash['email'] },
       anonymous: anonymous_users.length,
     }
   end
@@ -135,9 +184,9 @@ class MetronomeConfig
     anonymous_users  = clients.select {|o| o.nil?}
     {
       total:     identified_users.length + anonymous_users.length,
-      owners:    identified_users.select {|hash| hash['role'] == 'owner' }.length,
-      maestros:  identified_users.select {|hash| hash['role'] == 'maestro' }.length,
-      musicians: identified_users.select {|hash| hash['role'] == 'musician' }.length,
+      owners:    identified_users.select {|hash| hash['role'] == ROLE_OWNER    }.length,
+      maestros:  identified_users.select {|hash| hash['role'] == ROLE_MAESTRO  }.length,
+      musicians: identified_users.select {|hash| hash['role'] == ROLE_MUSICIAN }.length,
       anonymous: anonymous_users.length,
     }
   end
@@ -172,10 +221,25 @@ module Metronome
               metronome = MetronomeConfig.from_json(config_json)
 
               # Send to connected clients
-              @clients[slug].each do |ws|
-                # TODO: change this back
-                # ws.send metronome.public_json
-                ws.send metronome.logged_in_json
+              @clients[slug].each do |client_obj|
+                token = client_obj[:token]
+                ws    = client_obj[:client]
+
+                unless metronome.invitees.has_key?(token)
+                  ws.send metronome.public_json
+                  next
+                end
+
+                invitee = metronome.invitees[token]
+                if invitee['role'] == MetronomeConfig::ROLE_OWNER
+                  ws.send metronome.owner_json
+                elsif invitee['role'] == MetronomeConfig::ROLE_MAESTRO
+                  ws.send metronome.maestro_json
+                elsif invitee['role'] == MetronomeConfig::ROLE_MUSICIAN
+                  ws.send metronome.musician_json
+                else
+                  ws.send metronome.public_json
+                end
               end
             rescue => e
               puts "error: #{e.inspect}"
@@ -226,11 +290,16 @@ module Metronome
         # Add the client to the list of clients for this slug on this server
         @clients[slug] ||= []
         puts "Connecting client ##{ws.object_id} to metronome: '#{slug}'."
-        @clients[slug] << ws
+        @clients[slug] << { client: ws, token: token }
 
         # Send the current info to the client
-        if token and metronome.invitees.has_key?(token)
-          ws.send metronome.logged_in_json
+        invitee = metronome.invitees[token]
+        if token and invitee and invitee[:role] == MetronomeConfig::ROLE_OWNER
+          ws.send metronome.owner_json
+        elsif token and invitee and invitee[:role] == MetronomeConfig::ROLE_MAESTRO
+          ws.send metronome.maestro_json
+        elsif token and invitee and invitee[:role] == MetronomeConfig::ROLE_MUSICIAN
+          ws.send metronome.musician_json
         else
           ws.send metronome.public_json
         end
@@ -258,7 +327,7 @@ module Metronome
           next
         end
 
-        # Make sure the user is an authorized :owner or :maestro
+        # Make sure the user is an authorized Owner or Maestro
         # TODO: Implement CSRF protection, see: http://faye.jcoglan.com/security/csrf.html
         token = _get_token(slug, event)
         unless token
@@ -270,8 +339,8 @@ module Metronome
           next ws.send metronome.public_json
         end
         invitee = metronome.invitees[token]
-        unless invitee['role'] == 'owner' or invitee['role'] == 'maestro'
-          puts "User #{invitee['email']} is #{invitee['role']}, not :owner/:maestro, so they can't make edits."
+        unless invitee['role'] == MetronomeConfig::ROLE_OWNER or invitee['role'] == MetronomeConfig::ROLE_MAESTRO
+          puts "User #{invitee['email']} is #{invitee['role']}, not Owner/Maestro, so they can't make edits."
           next ws.send metronome.public_json
         end
 
@@ -290,8 +359,13 @@ module Metronome
 
         puts "Updated metronome '#{slug}' to: #{metronome.to_json}"
 
-        if token and metronome.invitees.has_key?(token)
-          ws.send metronome.logged_in_json
+        invitee = metronome.invitees[token]
+        if token and invitee and invitee['role'] == MetronomeConfig::ROLE_OWNER
+          ws.send metronome.owner_json
+        elsif token and invitee and invitee['role'] == MetronomeConfig::ROLE_MAESTRO
+          ws.send metronome.maestro_json
+        elsif token and invitee and invitee['role'] == MetronomeConfig::ROLE_MUSICIAN
+          ws.send metronome.musician_json
         else
           ws.send metronome.public_json
         end
@@ -299,9 +373,11 @@ module Metronome
 
       ws.on :close do |event|
         @clients.each_pair do |slug, clients|
-          if clients.include?(ws)
+          client_objects = clients.map {|obj| obj[:client] }
+          if client_objects.map {|obj| obj[:client] }.include?(ws)
             puts "Removing disconnected client ##{ws.object_id} from metronome: '#{slug}'."
-            @clients[slug].delete(ws)
+            index = client_objects.index(ws)
+            @clients[slug].delete_at(index)
 
             # Got the slug
             config_json = @redis.get(slug)

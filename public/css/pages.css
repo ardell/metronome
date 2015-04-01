@@ -14,6 +14,8 @@ body {
 
 .visibility-hidden { visibility: hidden; }
 
+.read-only { cursor: not-allowed; }
+
 /* NOTE: Had to make changes for the "Connected right now..." tooltip. Test when changing. */
 .tooltip.in { opacity: 1.0; }
 .tooltip-arrow {
@@ -173,6 +175,11 @@ html.touch .nav-sidebar li.swiped:hover .actions {
   color: #333;
 }
 
+#show-page #tap-control .tempo.tall {
+  height: 260px;
+  line-height: 260px;
+}
+
 #show-page #tap-control #tap-button {
   display: block;
   text-decoration: none;
@@ -258,6 +265,11 @@ html.touch #show-page #tap-control #tap-button.active {
   margin-bottom: -16px;
 }
 
+.preset-list span.preset-title {
+  padding: 10px 15px;
+  display: block;
+}
+
 .connected-user-list {
   text-align: left;
   position: absolute;
@@ -301,5 +313,21 @@ html.touch #show-page #tap-control #tap-button.active {
 .sharing-dialog .public-link {
   line-height: 18px;
   margin-left: 20px;
+}
+
+.read-only-indicator {
+  display: inline-block;
+  width: 44px;
+  padding: 6px;
+  text-align: center;
+}
+
+.well {
+  background: #eee;
+  color: #000;
+}
+.mute-button.mute-on {
+  background: #d9534f;
+  color: #fff;
 }
 

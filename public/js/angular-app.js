@@ -377,6 +377,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   $scope.muted           = null;
   $scope.presets         = [];
   $scope.isPublic        = null;
+  $scope.role            = null;
   $scope.connections     = null;
   $scope.startTime       = getServerTime($scope.offset);
   $scope.isNumber        = angular.isNumber;
@@ -398,6 +399,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
           $scope.muted           = data.muted;
           $scope.presets         = [];
           $scope.isPublic        = data.isPublic;
+          $scope.role            = data.role;
           $scope.connections     = data.connections;
           $scope.startTime       = data.startTime;
           _.each(data.presets, function(preset) {

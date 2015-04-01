@@ -55,13 +55,16 @@
                  <b>Anonymous Users</b>: {{connections.anonymous}}
                </div>
              </div>
-             <hr style='border-top: 1px solid #666; height: 0px; margin: 0;'>
-             <div class='container' style='width: 100%;'>
-               <p style='margin-top: 10px;'>
-                 <a class='btn btn-primary' ng-click="showConnectedUserList = false" data-toggle="modal" data-target=".sharing-dialog">
-                   <i class='glyphicon glyphicon-cog'></i> Manage Sharing
-                 </a>
-               </p>
+
+             <div ng-show="role == 'owner'">
+               <hr style='border-top: 1px solid #666; height: 0px; margin: 0;'>
+               <div class='container' style='width: 100%;'>
+                 <p style='margin-top: 10px;'>
+                   <a class='btn btn-primary' ng-click="showConnectedUserList = false" data-toggle="modal" data-target=".sharing-dialog">
+                     <i class='glyphicon glyphicon-cog'></i> Manage Sharing
+                   </a>
+                 </p>
+               </div>
              </div>
            </div>
          </li>
@@ -76,19 +79,19 @@
         <div class="col-xs-12 col-sm-4 sidebar">
           <h4>
             Presets
-            <a href="#" class="btn btn-success btn-xs pull-right" ng-click="editPreset()">
+            <a href="#" class="btn btn-success btn-xs pull-right" ng-click="editPreset()" ng-show="role == 'owner' || role == 'maestro'">
               <i class="glyphicon glyphicon-plus" aria-hidden="true"></i>
               New Preset
             </a>
           </h4>
 
-          <ul class="nav nav-sidebar" on-tap-hold-add-class="sorting">
+          <ul class="nav nav-sidebar preset-list" on-tap-hold-add-class="sorting">
             <li ng-show="!presets || presets.length < 1" class="empty">
-              You haven't created any presets yet.
+              There are no presets for this metronome.
             </li>
 
             <li ng-repeat="preset in presets" on-swipe-left-add-class="swiped">
-              <span class="pull-right actions">
+              <span class="pull-right actions" ng-show="role == 'owner' || role == 'maestro'">
                 <a href="#" class="btn btn-default" alt="Edit Preset" ng-click="editPreset(preset)">
                   <i class="glyphicon glyphicon-pencil"></i>
                 </a>
@@ -97,8 +100,11 @@
                 </a>
               </span>
 
-              <a href="#" ng-click="loadPreset(preset)">
-                <span class="sort-handle">||</span>
+              <a href="#" ng-click="loadPreset(preset)" ng-show="role == 'owner' || role == 'maestro'">
+                <!-- <span class="sort-handle">||</span> -->
+                {{preset.title}}
+              </a>
+              <span class="preset-title" ng-hide="role == 'owner' || role == 'maestro'">
                 {{preset.title}}
               </a>
             </li>
@@ -109,14 +115,20 @@
           <div class="metronome-body">
             <div class="row">
               <div class="col-xs-8 form-inline">
-                <select ng-model="beatsPerMeasure" class="form-control" style="display: inline; width: auto;">
+                <select ng-model="beatsPerMeasure" class="form-control" style="display: inline; width: auto;" ng-show="role == 'owner' || role == 'maestro'">
                   <option value="4">4/4</option>
                   <option value="3">3/4</option>
                   <option value="2">2/4</option>
                   <option value="no-emphasis">Straight</option>
                 </select>
+                <span class="well well-sm read-only-indicator read-only" ng-hide="role == 'owner' || role == 'maestro'">
+                  <span ng-show="beatsPerMeasure == '4'">4/4</span>
+                  <span ng-show="beatsPerMeasure == '3'">3/4</span>
+                  <span ng-show="beatsPerMeasure == '2'">2/4</span>
+                  <span ng-show="beatsPerMeasure == 'no-emphasis'">Straight</span>
+                </span>
 
-                <select ng-model="key" class="form-control" style="display: inline; width: auto;">
+                <select ng-model="key" class="form-control" style="display: inline; width: auto;" ng-show="role == 'owner' || role == 'maestro'">
                   <option value="c">C</option>
                   <option value="c#">C&#9839;</option>
                   <option value="d">D</option>
@@ -131,18 +143,38 @@
                   <option value="b">B</option>
                   <!-- <option value="tock">Tock</option> -->
                 </select>
+                <span class="well well-sm read-only-indicator read-only" ng-hide="role == 'owner' || role == 'maestro'">
+                  <span ng-show="key == 'c'">C</span>
+                  <span ng-show="key == 'c#'">C&#9839;</span>
+                  <span ng-show="key == 'd'">D</span>
+                  <span ng-show="key == 'eb'">E&#9837;</span>
+                  <span ng-show="key == 'e'">E</span>
+                  <span ng-show="key == 'f'">F</span>
+                  <span ng-show="key == 'f#'">F&#9839;</span>
+                  <span ng-show="key == 'g'">G</span>
+                  <span ng-show="key == 'ab'">A&#9837;</span>
+                  <span ng-show="key == 'a'">A</span>
+                  <span ng-show="key == 'bb'">B&#9837;</span>
+                  <span ng-show="key == 'b'">B</span>
+                </span>
               </div>
 
               <div class="col-xs-4 text-right">
-                <input type="checkbox"
-                  bs-switch
-                  mute-switch
-                  ng-model="muted"
-                  data-on-text="✕"
-                  data-off-text="✓"
-                  data-on-color="danger"
-                  data-handle-width="18"
-                  data-label-width="8">
+                <span ng-show="role == 'owner' || role == 'maestro'">
+                  <input type="checkbox"
+                    bs-switch
+                    mute-switch
+                    ng-model="muted"
+                    data-on-text="✕"
+                    data-off-text="✓"
+                    data-on-color="danger"
+                    data-handle-width="18"
+                    data-label-width="8">
+                </span>
+                <span ng-class="{ 'mute-button': true, 'mute-on': muted, 'mute-off': !muted, 'well': true, 'well-sm': true, 'read-only-indicator': true, 'read-only': true }" ng-hide="role == 'owner' || role == 'maestro'">
+                  <i ng-show="muted" class="glyphicon glyphicon-volume-off"></i>
+                  <i ng-hide="muted" class="glyphicon glyphicon-volume-up"></i>
+                </span>
               </div>
               <!-- <button ng-click="sync()">Re-sync</button> -->
             </div> <!-- .row -->
@@ -150,10 +182,10 @@
             <div class="row" style="margin-top: 25px;">
               <div class="col-xs-12">
                 <div id="tap-wrapper" class="{{beatDisplayClass}} {{beatsPerMeasureDisplayClass}}">
-                  <div id="tap-control">
-                    <div class="tempo">{{beatsPerMinute | number:1}}</div>
-                    <input type="text" class="tempo-edit" value="{{beatsPerMinute | number:1}}" select-on-click>
-                    <a href="#" id="tap-button" onclick="event.preventDefault();">Tap</a>
+                  <div id="tap-control" class="read-only">
+                    <div ng-class="{ 'tempo': true, 'tall': role != 'owner' && role != 'maestro' }">{{beatsPerMinute | number:1}}</div>
+                    <input type="text" class="tempo-edit" value="{{beatsPerMinute | number:1}}" select-on-click ng-show="role == 'owner' || role == 'maestro'">
+                    <a href="#" id="tap-button" onclick="event.preventDefault();" ng-show="role == 'owner' || role == 'maestro'">Tap</a>
                   </div>
                   <svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="arcs">
                     <circle cx="145" cy="145" r="130" stroke="black" stroke-width="15" fill="none" />
