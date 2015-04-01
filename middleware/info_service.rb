@@ -63,6 +63,25 @@ class MetronomeConfig
     to_h.to_json
   end
 
+  def logged_in_h
+    {
+      slug:            @slug,
+      email:           @email,
+      beatsPerMinute:  @beatsPerMinute,
+      beatsPerMeasure: @beatsPerMeasure,
+      key:             @key,
+      muted:           @muted,
+      presets:         @presets,
+      connections:     _connections_for_logged_in_user,
+      isPublic:        @isPublic,
+      startTime:       @startTime,
+    }
+  end
+
+  def logged_in_json
+    logged_in_h.to_json
+  end
+
   def public_h
     {
       slug:            @slug,
@@ -72,7 +91,7 @@ class MetronomeConfig
       key:             @key,
       muted:           @muted,
       presets:         @presets,
-      connections:     _connections,
+      connections:     _connections_for_anonymous_user,
       isPublic:        @isPublic,
       startTime:       @startTime,
     }
@@ -99,7 +118,19 @@ class MetronomeConfig
 
   private
 
-  def _connections
+  def _connections_for_logged_in_user
+    identified_users = clients.uniq.map {|token| invitees[token] }.compact
+    anonymous_users  = clients.select {|o| o.nil?}
+    {
+      total:     identified_users.length + anonymous_users.length,
+      owners:    identified_users.select {|hash| hash['role'] == 'owner' }.map {|hash| hash['email'] },
+      maestros:  identified_users.select {|hash| hash['role'] == 'maestro' }.map {|hash| hash['email'] },
+      musicians: identified_users.select {|hash| hash['role'] == 'musician' }.map {|hash| hash['email'] },
+      anonymous: anonymous_users.length,
+    }
+  end
+
+  def _connections_for_anonymous_user
     identified_users = clients.uniq.map {|token| invitees[token] }.compact
     anonymous_users  = clients.select {|o| o.nil?}
     {
@@ -196,7 +227,11 @@ module Metronome
         @clients[slug] << ws
 
         # Send the current info to the client
-        ws.send metronome.public_json
+        if token and metronome.invitees.has_key?(token)
+          ws.send metronome.logged_in_json
+        else
+          ws.send metronome.public_json
+        end
       end
 
       ws.on :message do |event|
@@ -205,7 +240,7 @@ module Metronome
 
         unless hash.has_key?('slug')
           puts "No slug specified for message."
-          next ws.send metronome.public_json
+          next
         end
         slug = hash['slug']
 
@@ -213,12 +248,12 @@ module Metronome
         config_json = @redis.get(slug)
         unless config_json
           puts "Metronome not found for slug: #{slug}."
-          next ws.send metronome.public_json
+          next
         end
         metronome = MetronomeConfig.from_json(config_json)
         unless metronome
           puts "Could not parse metronome config for: #{slug}."
-          next ws.send metronome.public_json
+          next
         end
 
         # Make sure the user is an authorized :owner or :maestro
@@ -253,7 +288,11 @@ module Metronome
 
         puts "Updated metronome '#{slug}' to: #{metronome.to_json}"
 
-        ws.send metronome.public_json
+        if token and metronome.invitees.has_key?(token)
+          ws.send metronome.logged_in_json
+        else
+          ws.send metronome.public_json
+        end
       end
 
       ws.on :close do |event|
