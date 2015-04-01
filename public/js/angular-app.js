@@ -635,6 +635,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
 
     // High tick
     highTick = function() {
+      if (!$scope.beatsPerMeasure) return;  // a proxy for whether we've received any info from the server yet
       if (window.MUTED) return;
       if ($scope.muted) return;
       if (!document.hasFocus()) return;
@@ -645,6 +646,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
 
     // Low tick
     lowTick = function() {
+      if (!$scope.beatsPerMeasure) return;  // a proxy for whether we've received any info from the server yet
       if (window.MUTED) return;
       if ($scope.muted) return;
       if (!document.hasFocus()) return;
