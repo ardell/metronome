@@ -173,7 +173,9 @@ module Metronome
 
               # Send to connected clients
               @clients[slug].each do |ws|
-                ws.send metronome.public_json
+                # TODO: change this back
+                # ws.send metronome.public_json
+                ws.send metronome.logged_in_json
               end
             rescue => e
               puts "error: #{e.inspect}"

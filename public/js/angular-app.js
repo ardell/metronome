@@ -368,6 +368,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   $scope.presets         = [];
   $scope.connections     = null;
   $scope.startTime       = getServerTime($scope.offset);
+  $scope.isNumber        = angular.isNumber;
   var deferred           = $q.defer();
   var infoWebSocket      = deferred.promise;
   syncResult.then(function(offset) {
