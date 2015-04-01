@@ -69,13 +69,13 @@ module Metronome
 
     get '/:slug' do
       # Make sure a metronome exists for this slug
-      slug        = params['slug']
+      @slug       = params['slug']
       redis       = _get_redis
-      config_json = redis.get(slug)
+      config_json = redis.get(@slug)
       raise Sinatra::NotFound unless config_json
 
       # Check cookie to make sure user can view this slug
-      token = cookies["metronome_token_#{slug}"]
+      token = cookies["metronome_token_#{@slug}"]
       metronome = MetronomeConfig.from_json(config_json)
       unless metronome.isPublic or metronome.invitees.has_key?(token)
         raise Sinatra::NotFound

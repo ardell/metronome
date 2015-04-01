@@ -58,7 +58,7 @@
              <hr style='border-top: 1px solid #666; height: 0px; margin: 0;'>
              <div class='container' style='width: 100%;'>
                <p style='margin-top: 10px;'>
-                 <a class='btn btn-primary'>
+                 <a class='btn btn-primary' ng-click="showConnectedUserList = false" data-toggle="modal" data-target=".sharing-dialog">
                    <i class='glyphicon glyphicon-cog'></i> Manage Sharing
                  </a>
                </p>
@@ -287,6 +287,173 @@
           <a href="#" class="btn btn-success" ng-click="editPreset(); dismissModal();">
             <i class="glyphicon glyphicon-plus" aria-hidden="true"></i>
             New Preset
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade sharing-dialog" tabindex="-1" role="dialog" aria-hidden="true" ng-controller="SharingController">
+    <div class="modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Sharing</h4>
+        </div>
+
+        <div class="modal-body">
+          <p>
+            <strong>
+              <i class="glyphicon glyphicon-user"></i>
+              Share with these users
+            </strong>
+          </p>
+
+          <form name="form.new" method="post" action="">
+            <table class="table form-inline">
+              <tr>
+                <td>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="glyphicon glyphicon-envelope"></i>
+                    </div>
+                    <input type="email" class="form-control" value="ardell@gmail.com" readonly>
+                  </div>
+                </td>
+                <td class="text-right">
+                  <select class="form-control">
+                    <option selected>Owner</option>
+                    <option>Maestro</option>
+                    <option>Musician</option>
+                  </select>
+                  <button class="btn btn-danger">
+                    <i class="glyphicon glyphicon-remove"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="glyphicon glyphicon-envelope"></i>
+                    </div>
+                    <input type="email" class="form-control" value="shane.ardell@gmail.com" readonly>
+                  </div>
+                </td>
+                <td class="text-right">
+                  <select class="form-control">
+                    <option>Owner</option>
+                    <option selected>Maestro</option>
+                    <option>Musician</option>
+                  </select>
+                  <button class="btn btn-danger">
+                    <i class="glyphicon glyphicon-remove"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="glyphicon glyphicon-envelope"></i>
+                    </div>
+                    <input type="email" class="form-control" value="mark@dillonchurch.org" readonly>
+                  </div>
+                </td>
+                <td class="text-right">
+                  <select class="form-control">
+                    <option>Owner</option>
+                    <option selected>Maestro</option>
+                    <option>Musician</option>
+                  </select>
+                  <button class="btn btn-danger">
+                    <i class="glyphicon glyphicon-remove"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="input-group">
+                    <div class="input-group-addon">
+                      <i class="glyphicon glyphicon-envelope"></i>
+                    </div>
+                    <input type="email" class="form-control" value="lisa.best@gmail.com" readonly>
+                  </div>
+                </td>
+                <td class="text-right">
+                  <select class="form-control">
+                    <option>Owner</option>
+                    <option>Maestro</option>
+                    <option selected>Musician</option>
+                  </select>
+                  <button class="btn btn-danger">
+                    <i class="glyphicon glyphicon-remove"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div ng-class="{ 'form-group': true, 'has-success': (form.new.$dirty && form.new.$valid), 'has-error': (form.new.$dirty && form.new.$invalid), 'has-feedback': form.new.$dirty }">
+                    <div class="input-group">
+                      <div class="input-group-addon">
+                        <i class="glyphicon glyphicon-envelope"></i>
+                      </div>
+                      <input type="email" class="form-control" id="email" ng-model="newInvitee.email" placeholder="ringo@the-beatles.com" required autofocus>
+                    </div>
+                    <span class="glyphicon glyphicon-ok form-control-feedback" ng-show="form.new.$dirty && form.new.$valid" aria-hidden="true"></span>
+                    <span class="glyphicon glyphicon-remove form-control-feedback" ng-show="form.new.$dirty && form.new.$invalid" aria-hidden="true"></span>
+                  </div>
+                </td>
+                <td class="text-right">
+                  <select class="form-control">
+                    <option>Owner</option>
+                    <option>Maestro</option>
+                    <option selected>Musician</option>
+                  </select>
+
+                  <button class="btn btn-success">
+                    <i class="glyphicon glyphicon-plus"></i>
+                    Invite
+                  </button>
+                </td>
+              </tr>
+            </table>
+          </form>
+
+          <div class="form-group checkbox">
+            <p>
+              <strong>
+                <i class="glyphicon glyphicon-globe"></i>
+                Public sharing
+              </strong>
+            </p>
+
+            <div class="radio">
+              <label>
+                <input type="radio" name="public-sharing" ng-model="isPublic" ng-value="false">
+                <b>OFF</b> - Only specific people can access the metronome
+              </label>
+            </div>
+
+            <div class="radio">
+              <label>
+                <input type="radio" name="public-sharing" ng-model="isPublic" ng-value="true">
+                <b>ON</b> - Allow anyone with the link to view the metronome
+              </label>
+              <div ng-class="{ 'public-link': true, 'visibility-hidden': !isPublic }">
+                Link:
+                <a href="http://www.shared-metronome.com/<%= @slug %>">
+                  http://www.shared-metronome.com/<%= @slug %>
+                </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <a href="#" class="btn btn-default" ng-click="dismissModal();">
+            Cancel
+          </a>
+          <a href="#" class="btn btn-primary" ng-click="save(); dismissModal();">
+            Save
           </a>
         </div>
       </div>

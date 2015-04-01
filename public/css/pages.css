@@ -12,6 +12,8 @@ body {
   cursor: hand;
 }
 
+.visibility-hidden { visibility: hidden; }
+
 /* NOTE: Had to make changes for the "Connected right now..." tooltip. Test when changing. */
 .tooltip.in { opacity: 1.0; }
 .tooltip-arrow {
@@ -246,7 +248,7 @@ html.touch #show-page #tap-control #tap-button.active {
 #tap-wrapper.beats-per-measure-no-emphasis.beat-1 .beat-1-no-emphasis { visibility: visible; }
 #tap-wrapper.beats-per-measure-no-emphasis.beat-2 .beat-2-no-emphasis { visibility: visible; }
 
-.modal-sm {
+.modal-sm, .modal-lg {
   margin: auto;
   margin-top: 71px;
 }
@@ -292,5 +294,12 @@ html.touch #show-page #tap-control #tap-button.active {
 .connected-user-list ul {
   list-style-type: none;
   padding: 0;
+}
+
+.sharing-dialog table tr td { line-height: 34px; }
+
+.sharing-dialog .public-link {
+  line-height: 18px;
+  margin-left: 20px;
 }
 

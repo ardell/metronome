@@ -336,6 +336,16 @@ app.controller('PresetListController', function($scope) {
   };
 });
 
+app.controller('SharingController', function($scope) {
+  $scope.form = {};
+  $scope.newInvitee = {
+    email: 'foo@bar.com'
+  };
+  $scope.dismissModal = function() {
+    $('.sharing-dialog').modal('hide');
+  };
+});
+
 app.controller('PresetFormController', function($scope) {
   $scope.savePreset = function() {
     if ($scope.presetFormType == 'new') {
@@ -366,6 +376,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   $scope.key             = null;
   $scope.muted           = null;
   $scope.presets         = [];
+  $scope.isPublic        = null;
   $scope.connections     = null;
   $scope.startTime       = getServerTime($scope.offset);
   $scope.isNumber        = angular.isNumber;
@@ -386,6 +397,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
           $scope.key             = data.key;
           $scope.muted           = data.muted;
           $scope.presets         = [];
+          $scope.isPublic        = data.isPublic;
           $scope.connections     = data.connections;
           $scope.startTime       = data.startTime;
           _.each(data.presets, function(preset) {
@@ -458,6 +470,19 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
 
     // Focus on the new title input field
     setTimeout(function() { $('#new-title').focus().select(); }, 500);
+  }
+
+  $scope.inviteesEditBefore = [];
+  $scope.inviteesEditAfter  = [];
+  $scope.editInvitees       = function() {
+    $scope.inviteesEditBefore = $scope.invitees;
+    $scope.inviteesEditAfter  = angular.copy($scope.invitees);
+
+    // Open dialog
+    $('.sharing-dialog').modal('show');
+
+    // Dismiss tooltip
+    $scope.showConnectedUserList = false;
   }
 
   $scope.frequencies = [ 880.000, 440.000 ];  // hz
