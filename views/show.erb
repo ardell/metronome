@@ -13,63 +13,64 @@
         <span class="navbar-brand">Shared Metronome</span>
       </div> <!-- .navbar-header -->
 
-     <div id="navbar" class="collapse navbar-collapse">
-       <ul class="nav navbar-nav navbar-right">
-         <li ng-init="showConnectedUserList = false">
-           <a class="clickable" ng-click="showConnectedUserList = !showConnectedUserList">
-             <i class="glyphicon glyphicon-user"></i> {{connections.total}}
-           </a>
-           <div class="connected-user-list" ng-show="showConnectedUserList">
-             <div class="tooltip-arrow"></div>
-             <div class='container' style='width: 100%;'>
-               <h3 style='color: #fff; margin-top: 12px;'>Connected right now...</h3>
+      <div id="navbar" class="collapse navbar-collapse">
+        <ul class="nav navbar-nav navbar-right">
+          <li ng-init="showConnectedUserList = false">
+            <a class="clickable" ng-click="showConnectedUserList = !showConnectedUserList">
+              <i class="glyphicon glyphicon-user"></i> {{connections.total}}
+            </a>
 
-               <div class="user-type">
-                 <b>Owners</b>:
-                 <span ng-show="isNumber(connections.owners)">{{connections.owners}}</span>
-                 <span ng-show="!isNumber(connections.owners) && connections.owners.length == 0">0</span>
-                 <ul ng-show="!isNumber(connections.owners) && connections.owners.length > 0">
-                   <li ng-repeat="email in connections.owners">{{email}}</li>
-                 </ul>
-               </div>
+            <div class="connected-user-list" ng-show="showConnectedUserList">
+              <div class="tooltip-arrow"></div>
+              <div class='container' style='width: 100%;'>
+                <h3 style='color: #fff; margin-top: 12px;'>Connected right now...</h3>
 
-               <div class="user-type">
-                 <b>Maestros</b>:
-                 <span ng-show="isNumber(connections.maestros)">{{connections.maestros}}</span>
-                 <span ng-show="!isNumber(connections.maestros) && connections.maestros.length == 0">0</span>
-                 <ul ng-show="!isNumber(connections.maestros) && connections.maestros.length > 0">
-                   <li ng-repeat="email in connections.maestros">{{email}}</li>
-                 </ul>
-               </div>
+                <div class="user-type">
+                  <b>Owners</b>:
+                  <span ng-show="isNumber(connections.owners)">{{connections.owners}}</span>
+                  <span ng-show="!isNumber(connections.owners) && connections.owners.length == 0">0</span>
+                  <ul ng-show="!isNumber(connections.owners) && connections.owners.length > 0">
+                    <li ng-repeat="email in connections.owners">{{email}}</li>
+                  </ul>
+                </div>
 
-               <div class="user-type">
-                 <b>Musicians</b>:
-                 <span ng-show="isNumber(connections.musicians)">{{connections.musicians}}</span>
-                 <span ng-show="!isNumber(connections.musicians) && connections.musicians.length == 0">0</span>
-                 <ul ng-show="!isNumber(connections.musicians) && connections.musicians.length > 0">
-                   <li ng-repeat="email in connections.musicians">{{email}}</li>
-                 </ul>
-               </div>
+                <div class="user-type">
+                  <b>Maestros</b>:
+                  <span ng-show="isNumber(connections.maestros)">{{connections.maestros}}</span>
+                  <span ng-show="!isNumber(connections.maestros) && connections.maestros.length == 0">0</span>
+                  <ul ng-show="!isNumber(connections.maestros) && connections.maestros.length > 0">
+                    <li ng-repeat="email in connections.maestros">{{email}}</li>
+                  </ul>
+                </div>
 
-               <div class="user-type">
-                 <b>Anonymous Users</b>: {{connections.anonymous}}
-               </div>
-             </div>
+                <div class="user-type">
+                  <b>Musicians</b>:
+                  <span ng-show="isNumber(connections.musicians)">{{connections.musicians}}</span>
+                  <span ng-show="!isNumber(connections.musicians) && connections.musicians.length == 0">0</span>
+                  <ul ng-show="!isNumber(connections.musicians) && connections.musicians.length > 0">
+                    <li ng-repeat="email in connections.musicians">{{email}}</li>
+                  </ul>
+                </div>
 
-             <div ng-show="role == 'owner'">
-               <hr style='border-top: 1px solid #666; height: 0px; margin: 0;'>
-               <div class='container' style='width: 100%;'>
-                 <p style='margin-top: 10px;'>
-                   <a class='btn btn-primary' ng-click="showConnectedUserList = false" data-toggle="modal" data-target=".sharing-dialog">
-                     <i class='glyphicon glyphicon-cog'></i> Manage Sharing
-                   </a>
-                 </p>
-               </div>
-             </div>
-           </div>
-         </li>
-       </ul>
-     </div> <!-- .navbar-collapse -->
+                <div class="user-type">
+                  <b>Anonymous Users</b>: {{connections.anonymous}}
+                </div>
+              </div>
+
+              <div ng-show="role == 'owner'">
+                <hr style='border-top: 1px solid #666; height: 0px; margin: 0;'>
+                <div class='container' style='width: 100%;'>
+                  <p style='margin-top: 10px;'>
+                    <a class='btn btn-primary' ng-click="showConnectedUserList = false" data-toggle="modal" data-target=".sharing-dialog">
+                      <i class='glyphicon glyphicon-cog'></i> Manage Sharing
+                    </a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div> <!-- .navbar-collapse -->
     </div> <!-- .container-fluid -->
   </nav>
 
