@@ -100,15 +100,14 @@ class MetronomeConfig
   private
 
   def _connections
-    # Clients is a list of tokens, turn it into list of user hashes
-    unique_clients = clients.uniq
-    users          = unique_clients.map {|token| invitees[token] }.compact
+    identified_users = clients.uniq.map {|token| invitees[token] }.compact
+    anonymous_users  = clients.select {|o| o.nil?}
     {
-      total:     unique_clients.length,
-      owners:    users.select {|hash| hash['role'] == 'owner' }.length,
-      maestros:  users.select {|hash| hash['role'] == 'maestro' }.length,
-      musicians: users.select {|hash| hash['role'] == 'musician' }.length,
-      anonymous: unique_clients.select {|o| o.nil?}.length,
+      total:     identified_users.length + anonymous_users.length,
+      owners:    identified_users.select {|hash| hash['role'] == 'owner' }.length,
+      maestros:  identified_users.select {|hash| hash['role'] == 'maestro' }.length,
+      musicians: identified_users.select {|hash| hash['role'] == 'musician' }.length,
+      anonymous: anonymous_users.length,
     }
   end
 end
