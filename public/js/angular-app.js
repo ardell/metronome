@@ -338,8 +338,16 @@ app.controller('PresetListController', function($scope) {
 
 app.controller('SharingController', function($scope) {
   $scope.form = {};
-  $scope.newInvitee = {
-    email: 'foo@bar.com'
+  $scope.newInvitee = { email: '', role: 'maestro' };
+  $scope.addNewInvitee = function() {
+    $scope.inviteesEditAfter.push($scope.newInvitee);
+    $scope.newInvitee = { email: '', role: 'maestro' };
+  }
+  $scope.save = function() {
+    $scope.$parent.isPublic = $scope.isPublicEditAfter;
+    $scope.$parent.invitees = $scope.inviteesEditAfter;
+    $(window).trigger('settings:change');
+    $scope.dismissModal();
   };
   $scope.dismissModal = function() {
     $('.sharing-dialog').modal('hide');
@@ -379,6 +387,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   $scope.isPublic        = null;
   $scope.role            = null;
   $scope.connections     = null;
+  $scope.invitees        = null;
   $scope.startTime       = getServerTime($scope.offset);
   $scope.isNumber        = angular.isNumber;
   var deferred           = $q.defer();
@@ -391,6 +400,12 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
       autoReconnect: true,
       onmessage: function(message) {
         data = $.parseJSON(message.data);
+
+        // Redirect user if they don't have a role and the metronome is not public
+        if (!data.role && !data.isPublic) {
+          window.location.reload();
+        }
+
         $scope.$apply(function() {
           sendChangesToServer    = false;
           $scope.beatsPerMinute  = data.beatsPerMinute;
@@ -401,6 +416,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
           $scope.isPublic        = data.isPublic;
           $scope.role            = data.role;
           $scope.connections     = data.connections;
+          $scope.invitees        = data.invitees;
           $scope.startTime       = data.startTime;
           _.each(data.presets, function(preset) {
             $scope.presets.push({
@@ -474,11 +490,10 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     setTimeout(function() { $('#new-title').focus().select(); }, 500);
   }
 
-  $scope.inviteesEditBefore = [];
-  $scope.inviteesEditAfter  = [];
-  $scope.editInvitees       = function() {
-    $scope.inviteesEditBefore = $scope.invitees;
-    $scope.inviteesEditAfter  = angular.copy($scope.invitees);
+  $scope.inviteesEditAfter = [];
+  $scope.editSharing       = function() {
+    $scope.isPublicEditAfter = angular.copy($scope.isPublic);
+    $scope.inviteesEditAfter = angular.copy($scope.invitees);
 
     // Open dialog
     $('.sharing-dialog').modal('show');
@@ -615,6 +630,8 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
         key:             $scope.key,
         muted:           $scope.muted,
         presets:         $scope.presets,
+        isPublic:        $scope.isPublic,
+        invitees:        $scope.invitees,
         startTime:       $scope.startTime
       }));
     });

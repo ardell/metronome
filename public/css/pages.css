@@ -16,6 +16,9 @@ body {
 
 .read-only { cursor: not-allowed; }
 
+.less-right-padding { padding-right: 3px; }
+.less-left-padding { padding-left: 3px; }
+
 /* NOTE: Had to make changes for the "Connected right now..." tooltip. Test when changing. */
 .tooltip.in { opacity: 1.0; }
 .tooltip-arrow {

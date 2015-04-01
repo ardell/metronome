@@ -133,6 +133,7 @@ class MetronomeConfig
 
   def public_h
     {
+      role:            nil,
       slug:            @slug,
       email:           @email,
       beatsPerMinute:  @beatsPerMinute,
@@ -294,11 +295,11 @@ module Metronome
 
         # Send the current info to the client
         invitee = metronome.invitees[token]
-        if token and invitee and invitee[:role] == MetronomeConfig::ROLE_OWNER
+        if token and invitee and invitee['role'] == MetronomeConfig::ROLE_OWNER
           ws.send metronome.owner_json
-        elsif token and invitee and invitee[:role] == MetronomeConfig::ROLE_MAESTRO
+        elsif token and invitee and invitee['role'] == MetronomeConfig::ROLE_MAESTRO
           ws.send metronome.maestro_json
-        elsif token and invitee and invitee[:role] == MetronomeConfig::ROLE_MUSICIAN
+        elsif token and invitee and invitee['role'] == MetronomeConfig::ROLE_MUSICIAN
           ws.send metronome.musician_json
         else
           ws.send metronome.public_json
@@ -352,6 +353,11 @@ module Metronome
         metronome.muted           = hash['muted']           if hash.has_key?('muted')
         metronome.presets         = hash['presets']         if hash.has_key?('presets')
         metronome.startTime       = hash['startTime']       if hash.has_key?('startTime')
+
+        # Permit certain changes only if user is an owner
+        if invitee['role'] == MetronomeConfig::ROLE_OWNER
+          metronome.isPublic = hash['isPublic'] if hash.has_key?('isPublic')
+        end
 
         # Update redis (which will tell all the other clients)
         @redis.set(slug, metronome.to_json)
