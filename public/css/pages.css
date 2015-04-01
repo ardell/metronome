@@ -7,6 +7,24 @@ body {
   padding: 51px 0 0 0;
 }
 
+.clickable {
+  cursor: pointer;
+  cursor: hand;
+}
+
+/* NOTE: Had to make changes for the "Connected right now..." tooltip. Test when changing. */
+.tooltip.in { opacity: 1.0; }
+.tooltip-arrow {
+  border-bottom-color: #333;
+}
+.tooltip-inner {
+  max-width: 300px;
+  width: 300px;
+  background-color: #333;
+  box-shadow: -1px 1px 1px #999;
+  color: #ddd;
+}
+
 /***
  * Index page (/)
  ***/

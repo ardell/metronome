@@ -293,6 +293,15 @@ app.directive('replaceInput', function(){
   };
 });
 
+app.directive('tooltip', function(){
+  return {
+    restrict: 'A',
+    link: function(scope, element, attrs, modelCtrl) {
+      jQuery(element).tooltip();
+    }
+  };
+});
+
 app.controller('IndexController', function($scope) {
   $scope.slug = "";
   $scope.url = function() {
