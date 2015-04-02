@@ -67,14 +67,12 @@ class MetronomeConfig
     locals        = { title: @title, url: url }
     text_template = IO.read(File.dirname(__FILE__) + '/../views/invitation.text.erb')
     html_template = IO.read(File.dirname(__FILE__) + '/../views/invitation.html.erb')
-    # TODO: convert this hash to Ruby 1.9 syntax
     Pony.mail({
-      :to        => email,
-      :from      => 'no-reply@shared-metronome.com',
-      :subject   => "Invitation to shared metronome \"#{@title}\"",
-      :headers   => { "Content-Type" => "multipart/mixed" },
-      :body      => ERB.new(text_template).result(OpenStruct.new(locals).instance_eval { binding }),
-      :html_body => ERB.new(html_template).result(OpenStruct.new(locals).instance_eval { binding }),
+      to:        email,
+      from:      'Shared Metronome Notifications <no-reply@shared-metronome.com>',
+      subject:   "Invitation to shared metronome \"#{@title}\"",
+      body:      ERB.new(text_template).result(OpenStruct.new(locals).instance_eval { binding }),
+      html_body: ERB.new(html_template).result(OpenStruct.new(locals).instance_eval { binding }),
     })
 
     token
