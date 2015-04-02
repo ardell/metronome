@@ -183,7 +183,7 @@
             <div class="row" style="margin-top: 25px;">
               <div class="col-xs-12">
                 <div id="tap-wrapper" class="{{beatDisplayClass}} {{beatsPerMeasureDisplayClass}}">
-                  <div id="tap-control" class="read-only">
+                  <div id="tap-control" ng-class="{ 'read-only': role != 'owner' && role != 'maestro' }">
                     <div ng-class="{ 'tempo': true, 'tall': role != 'owner' && role != 'maestro' }">{{beatsPerMinute | number:1}}</div>
                     <input type="text" class="tempo-edit" value="{{beatsPerMinute | number:1}}" select-on-click ng-show="role == 'owner' || role == 'maestro'">
                     <a href="#" id="tap-button" onclick="event.preventDefault();" ng-show="role == 'owner' || role == 'maestro'">Tap</a>
