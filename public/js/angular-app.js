@@ -87,8 +87,17 @@ app.factory('TimeSynchronizationFactory', function(WebSocketFactory, $q) {
               // Get the middle 4 results, make sure the variance is resonable
               var closeResults = results.slice(3, 7);
               var timeVariance = variance(closeResults);
+
+              // Record variance in Google Analytics
+              ga('send', 'timing', 'offset', 'variance', timeVariance, 'Offset Variance');
+
               if (timeVariance > .001) {
-                console.log("re-syncing, variance (" + timeVariance + ") was too high.");
+                // Report the retry to Google Analytics
+                ga('send', 'exception', {
+                  'exDescription': "Re-syncing, variance (" + timeVariance + ") was too high (> .001).",
+                  'exFatal':       false
+                });
+
                 results = [];
                 sendPing();
               } else {
@@ -337,12 +346,22 @@ app.controller('PresetListController', function($scope) {
 });
 
 app.controller('SharingController', function($scope) {
-  $scope.form = {};
+  $scope.form       = {};
   $scope.newInvitee = { email: '', role: 'maestro' };
+
   $scope.addNewInvitee = function() {
     $scope.inviteesEditAfter.push($scope.newInvitee);
     $scope.newInvitee = { email: '', role: 'maestro' };
+
+    // track in google analytics
+    ga('send', 'event', 'user', 'add', 'Add a User');
   }
+
+  $scope.$watch('isPublicEditAfter', function(newValue, oldValue) {
+    // Track in google analytics
+    ga('send', 'event', 'public', newValue, 'Change Public Sharing');
+  });
+
   $scope.save = function() {
     // Add new invitee if there's a valid email
     if ($scope.newInvitee.email && $scope.form.new.$valid) {
@@ -355,7 +374,11 @@ app.controller('SharingController', function($scope) {
     $(window).trigger('settings:change');
 
     $scope.dismissModal();
+
+    // Track in Google Analytics
+    ga('send', 'event', 'sharing', 'update', 'Save Sharing Settings');
   };
+
   $scope.dismissModal = function() {
     $('.sharing-dialog').modal('hide');
   };
@@ -366,10 +389,16 @@ app.controller('PresetFormController', function($scope) {
     if ($scope.presetFormType == 'new') {
       $scope.$parent.presets = $scope.$parent.presets || [];
       $scope.$parent.presets.push($scope.presetEditAfter);
+
+      // Track in Google Analytics
+      ga('send', 'event', 'preset', 'add', 'Add a Preset');
     } else {
       // Delete old preset
       var index = $scope.$parent.presets.indexOf($scope.presetEditBefore);
       $scope.$parent.presets.splice(index, 1, $scope.presetEditAfter);
+
+      // Track in Google Analytics
+      ga('send', 'event', 'preset', 'update', 'Update an Existing Preset');
     }
     $(window).trigger('settings:change');
 
@@ -449,6 +478,9 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
       $scope.startTime      = getServerTime($scope.offset);
       $el.val($scope.beatsPerMinute.toFixed(1));
       $(window).trigger('settings:change');
+
+      // Track in Google Analytics
+      ga('send', 'event', 'tempo', 'edit', 'Hand-edit Tempo');
     });
   }
   $el.on('blur', handleTempoEdit);
@@ -486,6 +518,9 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     $scope.beatsPerMeasure = preset.beatsPerMeasure;
     $scope.startTime       = serverTime;
     $(window).trigger('settings:change');
+
+    // Track in Google Analytics
+    ga('send', 'event', 'preset', 'load', 'Load a Preset');
   }
 
   $scope.deletePreset = function(preset) {
@@ -493,6 +528,9 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     if (index < 0) return;
     $scope.presets.splice(index, 1);
     $(window).trigger('settings:change');
+
+    // Track in Google Analytics
+    ga('send', 'event', 'preset', 'delete', 'Delete a Preset');
   }
 
   $scope.presetEditBefore = {};
@@ -559,6 +597,9 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     if (!sendChangesToServer) return;
     if (oldValue == null) return;
     $(window).trigger('settings:change');
+
+    // Track in Google Analytics
+    ga('send', 'event', 'key', 'change', 'Change Key');
   });
 
   $scope.$watch('beatsPerMeasure', function(newValue, oldValue) {
@@ -567,6 +608,9 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     if (angular.isUndefined(newValue)) return;
     if (oldValue == null) return;
     $(window).trigger('settings:change');
+
+    // Track in Google Analytics
+    ga('send', 'event', 'beatsPerMeasure', 'change', 'Change Time Signature');
   });
 
   $scope.$watch('muted', function(newValue, oldValue) {
@@ -575,6 +619,9 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     if (angular.isUndefined(newValue)) return;
     if (oldValue == null) return;
     $(window).trigger('settings:change');
+
+    // Track in Google Analytics
+    ga('send', 'event', 'mute', newValue, 'Change Mute');
   });
 
   $scope.$watch('presets', function(newValue, oldValue) {
@@ -617,6 +664,9 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
       // Make the change and save to server
       $scope.beatsPerMinute = beatsPerMinute;
       $(window).trigger('settings:change');
+
+      // Track in Google Analytics
+      ga('send', 'event', 'tempo', 'tap', 'Tap Tempo');
     });
   };
   var clearTaps = _.debounce(function() {

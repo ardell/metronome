@@ -8,5 +8,13 @@ m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
 ga('create', 'UA-61520600-1', 'auto');
 ga('send', 'pageview');
 </script>
+<% else %>
+<script>
+window.ga = function() {
+  // Don't send anything to Google Analytics from non-production servers, but
+  // also don't break scripts
+  console.log("Google Analytics: ", arguments);
+};
+</script>
 <% end %>
 
