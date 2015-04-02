@@ -355,7 +355,19 @@ app.controller('SharingController', function($scope) {
 
     // track in google analytics
     ga('send', 'event', 'user', 'add', 'Add a User');
-  }
+  };
+
+  $scope.deleteInvitee = function(invitee) {
+    var match = _.find(
+      $scope.inviteesEditAfter,
+      function(obj) { return obj.email == invitee.email && obj.role == invitee.role; }
+    );
+    var index = _.indexOf($scope.inviteesEditAfter, match);
+    $scope.inviteesEditAfter.splice(index, 1);
+
+    // track in google analytics
+    ga('send', 'event', 'user', 'delete', 'Delete a User');
+  };
 
   $scope.$watch('isPublicEditAfter', function(newValue, oldValue) {
     // Track in google analytics
