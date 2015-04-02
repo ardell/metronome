@@ -12,6 +12,14 @@ body {
   cursor: hand;
 }
 
+.no-text-select {
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
 .visibility-hidden { visibility: hidden; }
 
 .read-only { cursor: not-allowed; }
@@ -165,12 +173,10 @@ html.touch .nav-sidebar li.swiped:hover .actions {
 
 #show-page #tap-control .tempo-edit {
   width: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
   border-width: 0 0 1px 0;
   padding: 0;
-  z-index: -1;  /* until we get it showing/hiding on click */
+  position: absolute;
+  z-index: 1;
 }
 #show-page #tap-control .tempo-edit:focus {
   outline: none;
@@ -187,19 +193,19 @@ html.touch .nav-sidebar li.swiped:hover .actions {
   display: block;
   text-decoration: none;
   background-color: #444;
-  height: 100%;
+  position: absolute;
+  top: 82px;
+  left: 0;
+  bottom: 0;
+  right: 0;
   line-height: 116pt;
   font-size: 24pt;
   text-transform: uppercase;
   text-align: center;
   cursor: pointer;
   color: #282828;
+  outline: 0;
   -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
   -webkit-transition-duration: 0.2s;
      -moz-transition-duration: 0.2s;
        -o-transition-duration: 0.2s;

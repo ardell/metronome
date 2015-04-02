@@ -386,19 +386,20 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   var sendChangesToServer = false;
 
   // Query server for tempo, time sig, and start time via websockets (and set up handlers for when new data comes through)
-  $scope.beatsPerMinute  = null;
-  $scope.beatsPerMeasure = null;
-  $scope.key             = null;
-  $scope.muted           = null;
-  $scope.presets         = [];
-  $scope.isPublic        = null;
-  $scope.role            = null;
-  $scope.connections     = null;
-  $scope.invitees        = null;
-  $scope.startTime       = getServerTime($scope.offset);
-  $scope.isNumber        = angular.isNumber;
-  var deferred           = $q.defer();
-  var infoWebSocket      = deferred.promise;
+  $scope.beatsPerMinute         = null;
+  $scope.editableBeatsPerMinute = null;
+  $scope.beatsPerMeasure        = null;
+  $scope.key                    = null;
+  $scope.muted                  = null;
+  $scope.presets                = [];
+  $scope.isPublic               = null;
+  $scope.role                   = null;
+  $scope.connections            = null;
+  $scope.invitees               = null;
+  $scope.startTime              = getServerTime($scope.offset);
+  $scope.isNumber               = angular.isNumber;
+  var deferred                  = $q.defer();
+  var infoWebSocket             = deferred.promise;
   syncResult.then(function(offset) {
     var slug = window.location.pathname.substring(1);
     var uri  = "ws://" + window.document.location.host + "/info?slug=" + slug;
@@ -440,8 +441,29 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     ws.then(function() { deferred.resolve(ws); });
   });
 
+  // Handle binding between editableBeatsPerMinute
+  $el = jQuery('.tempo-edit');
+  var handleTempoEdit = function() {
+    $scope.$apply(function() {
+      $scope.beatsPerMinute = Math.round($scope.editableBeatsPerMinute * 10.0) / 10.0;
+      $scope.startTime      = getServerTime($scope.offset);
+      $el.val($scope.beatsPerMinute.toFixed(1));
+      $(window).trigger('settings:change');
+    });
+  }
+  $el.on('blur', handleTempoEdit);
+  $el.on('keydown', function(e) {
+    if (e.keyCode == 13) {
+      handleTempoEdit();
+      $el.blur();
+    }
+  });
+  $scope.$watch('beatsPerMinute', function() {
+    $scope.editableBeatsPerMinute = (Math.round($scope.beatsPerMinute * 10.0) / 10.0).toFixed(1);
+  });
+
   $scope.loadPreset = function(preset) {
-    var serverTime         = getServerTime($scope.offset);
+    var serverTime = getServerTime($scope.offset);
 
     // Don't do anything unless something's different
     var oldHash = {
