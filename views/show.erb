@@ -246,13 +246,13 @@
         </div>
 
         <div class="modal-body">
-          <ul class="nav nav-sidebar" on-tap-hold-add-class="sorting">
+          <ul class="nav nav-sidebar preset-list" on-tap-hold-add-class="sorting">
             <li ng-show="!presets || presets.length < 1" class="empty">
               You haven't created any presets yet.
             </li>
 
             <li ng-repeat="preset in presets" on-swipe-left-add-class="swiped">
-              <span class="pull-right actions">
+              <span class="pull-right actions" ng-show="role == 'owner' || role == 'maestro'">
                 <a href="#" class="btn btn-default" alt="Edit Preset" ng-click="editPreset(preset); dismissModal();">
                   <i class="glyphicon glyphicon-pencil"></i>
                 </a>
@@ -261,15 +261,18 @@
                 </a>
               </span>
 
-              <a href="#" ng-click="loadPreset(preset); dismissModal();">
+              <a class="clickable" ng-click="loadPreset(preset); dismissModal();" ng-show="role == 'owner' || role == 'maestro'">
                 <span class="sort-handle">||</span>
                 {{preset.title}}
               </a>
+              <span class="preset-title" ng-hide="role == 'owner' || role == 'maestro'">
+                {{preset.title}}
+              </span>
             </li>
           </ul>
         </div>
 
-        <div class="modal-footer">
+        <div class="modal-footer" ng-show="role == 'owner' || role == 'maestro'">
           <a href="#" class="btn btn-success" ng-click="editPreset(); dismissModal();">
             <i class="glyphicon glyphicon-plus" aria-hidden="true"></i>
             New Preset
