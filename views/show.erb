@@ -362,14 +362,14 @@
             </p>
 
             <div class="radio">
-              <label>
+              <label ng-click="handlePublicSharingChange(false)">
                 <input type="radio" name="public-sharing" ng-model="isPublicEditAfter" ng-value="false">
                 <b>OFF</b> - Only specific people can access the metronome
               </label>
             </div>
 
             <div class="radio">
-              <label>
+              <label ng-click="handlePublicSharingChange(true)">
                 <input type="radio" name="public-sharing" ng-model="isPublicEditAfter" ng-value="true">
                 <b>ON</b> - Allow anyone with the link to view the metronome
               </label>

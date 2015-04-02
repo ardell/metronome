@@ -369,10 +369,10 @@ app.controller('SharingController', function($scope) {
     ga('send', 'event', 'user', 'delete', 'Delete a User');
   };
 
-  $scope.$watch('isPublicEditAfter', function(newValue, oldValue) {
-    // Track in google analytics
+  $scope.handlePublicSharingChange = _.debounce(function(newValue) {
+    // track in google analytics
     ga('send', 'event', 'public', newValue, 'Change Public Sharing');
-  });
+  }, 250);
 
   $scope.save = function() {
     // Add new invitee if there's a valid email
