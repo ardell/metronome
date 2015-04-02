@@ -44,11 +44,9 @@ module Metronome
       end
 
       # Create the metronome in Redis
-      metronome = MetronomeConfig.new(slug, params['email'])
+      metronome = MetronomeConfig.new(params['title'], slug, params['email'])
       token     = metronome.invite(params['email'], :owner)
       redis.set(slug, metronome.to_json)
-
-      # TODO: send user an email including the token
 
       # Redirect to it
       redirect to("/#{slug}/#{token}")

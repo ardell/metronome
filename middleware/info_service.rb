@@ -2,6 +2,16 @@ require 'redis'
 require 'faye/websocket'
 require 'json'
 require 'observer'
+require 'pony'
+require 'erb'
+require 'ostruct'
+
+# Require config/environments/(production|development).rb
+Dir.glob(File.dirname(__FILE__) + "/../config/environments/#{settings.environment}.rb", &method(:require))
+
+# Require config/initializers/*.rb
+# NOTE: nothing in here yet.
+# Dir.glob(File.dirname(__FILE__) + "/config/initializers/*.rb", &method(:require))
 
 class MetronomeConfig
   include Observable
@@ -10,6 +20,7 @@ class MetronomeConfig
   ROLE_MAESTRO  = 'maestro'
   ROLE_MUSICIAN = 'musician'
 
+  attr_accessor :title
   attr_accessor :slug
   attr_accessor :email
   attr_accessor :beatsPerMinute
@@ -22,7 +33,8 @@ class MetronomeConfig
   attr_accessor :isPublic
   attr_accessor :startTime
 
-  def initialize(slug, email)
+  def initialize(title, slug, email)
+    @title           = title
     @slug            = slug
     @email           = email
     @beatsPerMinute  = 100
@@ -43,10 +55,28 @@ class MetronomeConfig
       token = SecureRandom.hex
     end
 
+    # Add the user to the list of invitees for this metronome
     @invitees[token] = {
       'email' => email,
-      'role'  => role
+      'role'  => role,
     }
+
+    # Send the user an email with the URL
+    # TODO: add a layout to emails.
+    url           = "http://www.shared-metronome.com/#{slug}/#{token}"
+    locals        = { title: @title, url: url }
+    text_template = IO.read(File.dirname(__FILE__) + '/../views/invitation.text.erb')
+    html_template = IO.read(File.dirname(__FILE__) + '/../views/invitation.html.erb')
+    # TODO: convert this hash to Ruby 1.9 syntax
+    Pony.mail({
+      :to        => email,
+      :from      => 'no-reply@shared-metronome.com',
+      :subject   => "Invitation to shared metronome \"#{@title}\"",
+      :headers   => { "Content-Type" => "multipart/mixed" },
+      :body      => ERB.new(text_template).result(OpenStruct.new(locals).instance_eval { binding }),
+      :html_body => ERB.new(html_template).result(OpenStruct.new(locals).instance_eval { binding }),
+    })
+
     token
   end
 
@@ -61,13 +91,20 @@ class MetronomeConfig
         # Invite the user
         invite(invitee_hash['email'], invitee_hash['role'])
       end
+    end
 
-      # TODO: delete users not in the invitee list
+    # Delete users not in the invitee list
+    invitee_emails = invitee_list.map {|obj| obj['email'] }
+    @invitees.each_pair do |token, invitee_hash|
+      unless invitee_emails.include?(invitee_hash['email'])
+        @invitees.delete(token)
+      end
     end
   end
 
   def to_h
     {
+      title:           @title,
       slug:            @slug,
       email:           @email,
       beatsPerMinute:  @beatsPerMinute,
@@ -89,6 +126,7 @@ class MetronomeConfig
   def owner_h
     {
       role:            ROLE_OWNER,
+      title:           @title,
       slug:            @slug,
       email:           @email,
       beatsPerMinute:  @beatsPerMinute,
@@ -110,6 +148,7 @@ class MetronomeConfig
   def maestro_h
     {
       role:            ROLE_MAESTRO,
+      title:           @title,
       slug:            @slug,
       email:           @email,
       beatsPerMinute:  @beatsPerMinute,
@@ -130,6 +169,7 @@ class MetronomeConfig
   def musician_h
     {
       role:            ROLE_MUSICIAN,
+      title:           @title,
       slug:            @slug,
       email:           @email,
       beatsPerMinute:  @beatsPerMinute,
@@ -150,6 +190,7 @@ class MetronomeConfig
   def public_h
     {
       role:            nil,
+      title:           @title,
       slug:            @slug,
       email:           @email,
       beatsPerMinute:  @beatsPerMinute,
@@ -169,7 +210,7 @@ class MetronomeConfig
 
   def self.from_json(json)
     hash                      = JSON.parse(json)
-    metronome                 = self.new(hash['slug'], hash['email'])
+    metronome                 = self.new(hash['title'], hash['slug'], hash['email'])
     metronome.beatsPerMinute  = hash['beatsPerMinute']
     metronome.beatsPerMeasure = hash['beatsPerMeasure']
     metronome.key             = hash['key']
