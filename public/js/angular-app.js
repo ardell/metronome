@@ -438,6 +438,18 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   var syncResult = TimeSynchronizationFactory.getOffset();
   syncResult.then(function(val) { $scope.offset = val; });
 
+  // Check modernizr to see whether the browser meets our requirements
+  $scope.requirementMet = function(requirement) {
+    if (requirement == 'js') return true;
+    return Modernizr[requirement];
+  };
+  $scope.allRequirementsMet = function() {
+    return $scope.requirementMet('js')
+      && $scope.requirementMet('websockets')
+      && $scope.requirementMet('svg')
+      && $scope.requirementMet('audio');
+  };
+
   // We won't record any changes until settings are loaded from the server
   var sendChangesToServer = false;
 

@@ -27,6 +27,12 @@ body {
 .less-right-padding { padding-right: 3px; }
 .less-left-padding { padding-left: 3px; }
 
+html.touch .hide-on-touch { display: none; }
+html.no-touch .show-on-touch { display: none; }
+
+html .hide-if-no-js { display: none; }
+html.js .hide-if-no-js { display: block; }
+
 /* NOTE: Had to make changes for the "Connected right now..." tooltip. Test when changing. */
 .tooltip.in { opacity: 1.0; }
 .tooltip-arrow {
@@ -108,8 +114,6 @@ button.navbar-item:last-of-type { margin-right: 8px; }
   margin: auto;
   margin-top: 10px;
 }
-
-.loading-indicator { padding: 0 15px; }
 
 @media (min-width: 768px) {
   .sidebar {
