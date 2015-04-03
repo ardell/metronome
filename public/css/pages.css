@@ -55,6 +55,26 @@ body {
   padding: 10px 0 0 0;
 }
 
+.real-time-alert {
+  display: none;
+  position: fixed;
+  width: 100%;
+  margin-top: -10px;
+  z-index: 1;
+  text-align: center;
+}
+.real-time-alert > div {
+  display: inline-block;
+  position: relative;
+  padding: 6px 10px;
+  background-color: #f9edbe;
+  border: 1px solid #f0c36d;
+  border-top-width: 0;
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px 0px;
+}
+
 .navbar { margin-bottom: 5px; }
 
 .navbar-item {

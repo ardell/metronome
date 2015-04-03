@@ -34,10 +34,18 @@ app.factory('WebSocketFactory', function($q) {
       var connect = function() {
         deferred   = $q.defer();
         ws         = new WebSocket(uri);
-        ws.onopen  = function() { deferred.resolve(obj); }
-        ws.onerror = function() { deferred.reject(obj);  }
+        ws.onopen  = function() {
+          $(window).trigger('websocket:connected');
+          deferred.resolve(obj);
+        }
+        ws.onerror = function() {
+          $(window).trigger('websocket:error');
+          deferred.reject(obj);
+        }
         ws.onclose = function() {
+          $(window).trigger('websocket:disconnected');
           if (!hash.autoReconnect) return;
+          $(window).trigger('websocket:reconnecting');
           // TODO: Improve our method of re-connecting
           setTimeout(function() { connect(); }, 1000);
         }
@@ -449,6 +457,19 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   var deferred                  = $q.defer();
   var infoWebSocket             = deferred.promise;
   syncResult.then(function(offset) {
+    // Set up listeners for reconnecting
+    $(window).on('websocket:reconnecting', function() {
+      // Show reconnecting alert
+      $('#real-time-alert').html('Connection lost, reconnecting...');
+      $('.real-time-alert').show();
+
+      // Listen (.one) for websocket:connected
+      $(window).one('websocket:connected', function() {
+        $('#real-time-alert').html('Connection lost, reconnecting... Success.');
+        $('.real-time-alert').delay(600).fadeOut();
+      });
+    });
+
     var slug = window.location.pathname.substring(1);
     var uri  = "ws://" + window.document.location.host + "/info?slug=" + slug;
     var ws   = WebSocketFactory.create({
