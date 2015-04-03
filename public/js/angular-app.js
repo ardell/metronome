@@ -1,7 +1,3 @@
-// Disable scrolling on touch devices
-$(document).bind('touchmove', function(e) { e.preventDefault(); });
-$('html,body').bind('touchmove', function(e) { e.preventDefault(); });
-
 var app = angular.module('metronome', ['frapontillo.bootstrap-switch']);
 
 function median(values) {
@@ -316,6 +312,16 @@ app.directive('tooltip', function(){
     restrict: 'A',
     link: function(scope, element, attrs, modelCtrl) {
       jQuery(element).tooltip();
+    }
+  };
+});
+
+app.directive('disableTouchmove', function(){
+  return {
+    restrict: 'A',
+    link: function(scope, element, attrs, modelCtrl) {
+      // Disable scrolling on touch devices
+      $(element).bind('touchmove', function(e) { e.preventDefault(); });
     }
   };
 });

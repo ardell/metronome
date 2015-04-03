@@ -161,7 +161,7 @@
             <div class="row">
               <div class="col-xs-12">
                 <div id="tap-wrapper" class="{{beatDisplayClass}} {{beatsPerMeasureDisplayClass}}">
-                  <div id="tap-control" ng-class="{ 'read-only': role != 'owner' && role != 'maestro' }">
+                  <div id="tap-control" disable-touchmove ng-class="{ 'read-only': role != 'owner' && role != 'maestro' }">
                     <div ng-show="role != 'owner' && role != 'maestro'" class="tempo tall no-text-select">{{beatsPerMinute | number:1}}</div>
                     <input ng-hide="role != 'owner' && role != 'maestro'" type="text" class="tempo-edit" ng-model="editableBeatsPerMinute" select-on-click ng-show="role == 'owner' || role == 'maestro'">
                     <a id="tap-button" class="no-text-select clickable" onclick="event.preventDefault();" ng-show="role == 'owner' || role == 'maestro'">Tap</a>
