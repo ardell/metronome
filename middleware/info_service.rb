@@ -315,142 +315,154 @@ module Metronome
       ws = Faye::WebSocket.new(env, nil, { ping: KEEPALIVE_TIME })
 
       ws.on :open do |event|
-        querystring = env['QUERY_STRING']
-        hash = Rack::Utils.parse_nested_query(querystring)
+        begin
+          querystring = env['QUERY_STRING']
+          hash = Rack::Utils.parse_nested_query(querystring)
 
-        # Make sure the client passed us a slug
-        unless hash.has_key?('slug')
-          next puts "Please specify the slug you wish to connect to."
-        end
-        slug = hash['slug']
+          # Make sure the client passed us a slug
+          unless hash.has_key?('slug')
+            next puts "Please specify the slug you wish to connect to."
+          end
+          slug = hash['slug']
 
-        # Set up the MetronomeConfig if it doesn't already exist in Redis
-        config_json = @redis.get(slug)
-        unless config_json
-          next puts "Could not find an active metronome with that slug."
-        end
-        metronome = MetronomeConfig.from_json(config_json)
+          # Set up the MetronomeConfig if it doesn't already exist in Redis
+          config_json = @redis.get(slug)
+          unless config_json
+            next puts "Could not find an active metronome with that slug."
+          end
+          metronome = MetronomeConfig.from_json(config_json)
 
-        # Get the user's token if they have one
-        token = _get_token(slug, event)
+          # Get the user's token if they have one
+          token = _get_token(slug, event)
 
-        # Add this user to the list of clients for this metronome
-        metronome.clients << token
-        @redis.set(slug, metronome.to_json)
-        @redis.publish(CHANNEL, metronome.to_json)
+          # Add this user to the list of clients for this metronome
+          metronome.clients << token
+          @redis.set(slug, metronome.to_json)
+          @redis.publish(CHANNEL, metronome.to_json)
 
-        # Add the client to the list of clients for this slug on this server
-        @clients[slug] ||= []
-        puts "Connecting client ##{ws.object_id} to metronome: '#{slug}'."
-        @clients[slug] << { client: ws, token: token }
+          # Add the client to the list of clients for this slug on this server
+          @clients[slug] ||= []
+          puts "Connecting client ##{ws.object_id} to metronome: '#{slug}'."
+          @clients[slug] << { client: ws, token: token }
 
-        # Send the current info to the client
-        invitee = metronome.invitees[token]
-        if token and invitee and invitee['role'] == MetronomeConfig::ROLE_OWNER
-          ws.send metronome.owner_json
-        elsif token and invitee and invitee['role'] == MetronomeConfig::ROLE_MAESTRO
-          ws.send metronome.maestro_json
-        elsif token and invitee and invitee['role'] == MetronomeConfig::ROLE_MUSICIAN
-          ws.send metronome.musician_json
-        else
-          ws.send metronome.public_json
+          # Send the current info to the client
+          invitee = metronome.invitees[token]
+          if token and invitee and invitee['role'] == MetronomeConfig::ROLE_OWNER
+            ws.send metronome.owner_json
+          elsif token and invitee and invitee['role'] == MetronomeConfig::ROLE_MAESTRO
+            ws.send metronome.maestro_json
+          elsif token and invitee and invitee['role'] == MetronomeConfig::ROLE_MUSICIAN
+            ws.send metronome.musician_json
+          else
+            ws.send metronome.public_json
+          end
+        rescue => e
+          Rollbar.error(e)
         end
       end
 
       ws.on :message do |event|
-        querystring = env['QUERY_STRING']
-        hash = Rack::Utils.parse_nested_query(querystring)
+        begin
+          querystring = env['QUERY_STRING']
+          hash = Rack::Utils.parse_nested_query(querystring)
 
-        unless hash.has_key?('slug')
-          puts "No slug specified for message."
-          next
-        end
-        slug = hash['slug']
+          unless hash.has_key?('slug')
+            puts "No slug specified for message."
+            next
+          end
+          slug = hash['slug']
 
-        # Pull the existing metronome from Redis
-        config_json = @redis.get(slug)
-        unless config_json
-          puts "Metronome not found for slug: #{slug}."
-          next
-        end
-        metronome = MetronomeConfig.from_json(config_json)
-        unless metronome
-          puts "Could not parse metronome config for: #{slug}."
-          next
-        end
+          # Pull the existing metronome from Redis
+          config_json = @redis.get(slug)
+          unless config_json
+            puts "Metronome not found for slug: #{slug}."
+            next
+          end
+          metronome = MetronomeConfig.from_json(config_json)
+          unless metronome
+            puts "Could not parse metronome config for: #{slug}."
+            next
+          end
 
-        # Make sure the user is an authorized Owner or Maestro
-        # TODO: Implement CSRF protection, see: http://faye.jcoglan.com/security/csrf.html
-        token = _get_token(slug, event)
-        unless token
-          puts "User doesn't have a token."
-          next ws.send metronome.public_json
-        end
-        unless metronome.invitees.has_key?(token)
-          puts "Token #{token} isn't authorized on metronome #{slug}."
-          next ws.send metronome.public_json
-        end
-        invitee = metronome.invitees[token]
-        unless invitee['role'] == MetronomeConfig::ROLE_OWNER or invitee['role'] == MetronomeConfig::ROLE_MAESTRO
-          puts "User #{invitee['email']} is #{invitee['role']}, not Owner/Maestro, so they can't make edits."
-          next ws.send metronome.public_json
-        end
+          # Make sure the user is an authorized Owner or Maestro
+          # TODO: Implement CSRF protection, see: http://faye.jcoglan.com/security/csrf.html
+          token = _get_token(slug, event)
+          unless token
+            puts "User doesn't have a token."
+            next ws.send metronome.public_json
+          end
+          unless metronome.invitees.has_key?(token)
+            puts "Token #{token} isn't authorized on metronome #{slug}."
+            next ws.send metronome.public_json
+          end
+          invitee = metronome.invitees[token]
+          unless invitee['role'] == MetronomeConfig::ROLE_OWNER or invitee['role'] == MetronomeConfig::ROLE_MAESTRO
+            puts "User #{invitee['email']} is #{invitee['role']}, not Owner/Maestro, so they can't make edits."
+            next ws.send metronome.public_json
+          end
 
-        # Make the change
-        hash = JSON.parse(event.data)
-        metronome.beatsPerMinute  = hash['beatsPerMinute']  if hash.has_key?('beatsPerMinute')
-        metronome.beatsPerMeasure = hash['beatsPerMeasure'] if hash.has_key?('beatsPerMeasure')
-        metronome.key             = hash['key']             if hash.has_key?('key')
-        metronome.muted           = hash['muted']           if hash.has_key?('muted')
-        metronome.presets         = hash['presets']         if hash.has_key?('presets')
-        metronome.startTime       = hash['startTime']       if hash.has_key?('startTime')
+          # Make the change
+          hash = JSON.parse(event.data)
+          metronome.beatsPerMinute  = hash['beatsPerMinute']  if hash.has_key?('beatsPerMinute')
+          metronome.beatsPerMeasure = hash['beatsPerMeasure'] if hash.has_key?('beatsPerMeasure')
+          metronome.key             = hash['key']             if hash.has_key?('key')
+          metronome.muted           = hash['muted']           if hash.has_key?('muted')
+          metronome.presets         = hash['presets']         if hash.has_key?('presets')
+          metronome.startTime       = hash['startTime']       if hash.has_key?('startTime')
 
-        # Permit certain changes only if user is an owner
-        if invitee['role'] == MetronomeConfig::ROLE_OWNER
-          metronome.isPublic = hash['isPublic']       if hash.has_key?('isPublic')
-          metronome.update_invitees(hash['invitees']) if hash.has_key?('invitees')
-        end
+          # Permit certain changes only if user is an owner
+          if invitee['role'] == MetronomeConfig::ROLE_OWNER
+            metronome.isPublic = hash['isPublic']       if hash.has_key?('isPublic')
+            metronome.update_invitees(hash['invitees']) if hash.has_key?('invitees')
+          end
 
-        # Update redis (which will tell all the other clients)
-        @redis.set(slug, metronome.to_json)
-        @redis.publish(CHANNEL, metronome.to_json)
+          # Update redis (which will tell all the other clients)
+          @redis.set(slug, metronome.to_json)
+          @redis.publish(CHANNEL, metronome.to_json)
 
-        puts "Updated metronome '#{slug}' to: #{metronome.to_json}"
+          puts "Updated metronome '#{slug}' to: #{metronome.to_json}"
 
-        invitee = metronome.invitees[token]
-        if token and invitee and invitee['role'] == MetronomeConfig::ROLE_OWNER
-          ws.send metronome.owner_json
-        elsif token and invitee and invitee['role'] == MetronomeConfig::ROLE_MAESTRO
-          ws.send metronome.maestro_json
-        elsif token and invitee and invitee['role'] == MetronomeConfig::ROLE_MUSICIAN
-          ws.send metronome.musician_json
-        else
-          ws.send metronome.public_json
+          invitee = metronome.invitees[token]
+          if token and invitee and invitee['role'] == MetronomeConfig::ROLE_OWNER
+            ws.send metronome.owner_json
+          elsif token and invitee and invitee['role'] == MetronomeConfig::ROLE_MAESTRO
+            ws.send metronome.maestro_json
+          elsif token and invitee and invitee['role'] == MetronomeConfig::ROLE_MUSICIAN
+            ws.send metronome.musician_json
+          else
+            ws.send metronome.public_json
+          end
+        rescue => e
+          Rollbar.error(e)
         end
       end
 
       ws.on :close do |event|
-        @clients.each_pair do |slug, clients|
-          client_objects = clients.map {|obj| obj[:client] }
-          if client_objects.include?(ws)
-            puts "Removing disconnected client ##{ws.object_id} from metronome: '#{slug}'."
-            index = client_objects.index(ws)
-            @clients[slug].delete_at(index)
+        begin
+          @clients.each_pair do |slug, clients|
+            client_objects = clients.map {|obj| obj[:client] }
+            if client_objects.include?(ws)
+              puts "Removing disconnected client ##{ws.object_id} from metronome: '#{slug}'."
+              index = client_objects.index(ws)
+              @clients[slug].delete_at(index)
 
-            # Got the slug
-            config_json = @redis.get(slug)
-            unless config_json
-              next puts "Metronome not found for slug: #{slug}."
+              # Got the slug
+              config_json = @redis.get(slug)
+              unless config_json
+                next puts "Metronome not found for slug: #{slug}."
+              end
+              metronome = MetronomeConfig.from_json(config_json)
+              unless metronome
+                next puts "Could not parse metronome config for: #{slug}."
+              end
+              token = _get_token(slug, event)
+              metronome.clients.delete_at(metronome.clients.index(token) || metronome.clients.length)
+              @redis.set(slug, metronome.to_json)
+              @redis.publish(CHANNEL, metronome.to_json)
             end
-            metronome = MetronomeConfig.from_json(config_json)
-            unless metronome
-              next puts "Could not parse metronome config for: #{slug}."
-            end
-            token = _get_token(slug, event)
-            metronome.clients.delete_at(metronome.clients.index(token) || metronome.clients.length)
-            @redis.set(slug, metronome.to_json)
-            @redis.publish(CHANNEL, metronome.to_json)
           end
+        rescue => e
+          Rollbar.error(e)
         end
       end
 

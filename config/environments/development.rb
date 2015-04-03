@@ -8,3 +8,7 @@ Pony.options = {
   },
 }
 
+Rollbar.configure do |config|
+  config.enabled = false
+end
+
