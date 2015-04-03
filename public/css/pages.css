@@ -54,7 +54,7 @@ body {
 #show-page {
   height: 100%;
   overflow: hidden;
-  padding: 5px 0 0 0;
+  padding: 10px 0 0 0;
 }
 
 .navbar { margin-bottom: 5px; }
@@ -88,7 +88,7 @@ button.navbar-item:last-of-type { margin-right: 8px; }
 .metronome-body {
   max-width: 446px;
   margin: auto;
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 .loading-indicator { padding: 0 15px; }
@@ -238,7 +238,7 @@ html.touch #show-page #tap-control #tap-button.active {
   position: relative;
   width:    290px;
   height:   290px;
-  margin:   auto;
+  margin:   5px auto 0 auto;
 }
 #tap-wrapper #tap-control {
   position: absolute;
@@ -337,6 +337,11 @@ html.touch #show-page #tap-control #tap-button.active {
   background: #eee;
   color: #000;
 }
+
+.well.read-only-indicator {
+  margin-bottom: 0;
+}
+
 .mute-button.mute-on {
   background: #d9534f;
   color: #fff;
