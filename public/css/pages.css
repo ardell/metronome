@@ -54,8 +54,10 @@ body {
 #show-page {
   height: 100%;
   overflow: hidden;
-  padding: 20px 0 0 0;
+  padding: 5px 0 0 0;
 }
+
+.navbar { margin-bottom: 5px; }
 
 .navbar-item {
   color: #9d9d9d;
