@@ -264,41 +264,37 @@ module Metronome
         redis_sub = Redis.new(url: ENV['REDISTOGO_URL'])
         redis_sub.subscribe(CHANNEL) do |on|
           on.message do |channel, msg|
-            begin
-              obj  = JSON.parse(msg)
-              slug = obj['slug']
-              next unless @clients.has_key?(slug)
+            obj  = JSON.parse(msg)
+            slug = obj['slug']
+            next unless @clients.has_key?(slug)
 
-              # Load metronome
-              config_json = @redis.get(slug)
-              unless config_json
-                next puts "Could not find an active metronome with that slug."
+            # Load metronome
+            config_json = @redis.get(slug)
+            unless config_json
+              next puts "Could not find an active metronome with that slug."
+            end
+            metronome = MetronomeConfig.from_json(config_json)
+
+            # Send to connected clients
+            @clients[slug].each do |client_obj|
+              token = client_obj[:token]
+              ws    = client_obj[:client]
+
+              unless metronome.invitees.has_key?(token)
+                ws.send metronome.public_json
+                next
               end
-              metronome = MetronomeConfig.from_json(config_json)
 
-              # Send to connected clients
-              @clients[slug].each do |client_obj|
-                token = client_obj[:token]
-                ws    = client_obj[:client]
-
-                unless metronome.invitees.has_key?(token)
-                  ws.send metronome.public_json
-                  next
-                end
-
-                invitee = metronome.invitees[token]
-                if invitee['role'] == MetronomeConfig::ROLE_OWNER
-                  ws.send metronome.owner_json
-                elsif invitee['role'] == MetronomeConfig::ROLE_MAESTRO
-                  ws.send metronome.maestro_json
-                elsif invitee['role'] == MetronomeConfig::ROLE_MUSICIAN
-                  ws.send metronome.musician_json
-                else
-                  ws.send metronome.public_json
-                end
+              invitee = metronome.invitees[token]
+              if invitee['role'] == MetronomeConfig::ROLE_OWNER
+                ws.send metronome.owner_json
+              elsif invitee['role'] == MetronomeConfig::ROLE_MAESTRO
+                ws.send metronome.maestro_json
+              elsif invitee['role'] == MetronomeConfig::ROLE_MUSICIAN
+                ws.send metronome.musician_json
+              else
+                ws.send metronome.public_json
               end
-            rescue => e
-              puts "error: #{e.inspect}"
             end
           end
         end

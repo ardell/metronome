@@ -8,4 +8,5 @@ gem "redis"
 gem "sinatra-formhelpers-ng"
 gem "sinatra-contrib"
 gem "pony"
+gem "rollbar", "~> 1.4.4"
 
