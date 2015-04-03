@@ -403,6 +403,7 @@ app.controller('SharingController', function($scope) {
 });
 
 app.controller('PresetFormController', function($scope) {
+  $scope.form       = {};
   $scope.savePreset = function() {
     if ($scope.presetFormType == 'new') {
       $scope.$parent.presets = $scope.$parent.presets || [];
@@ -572,7 +573,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     $('.preset-form-dialog').modal('show');
 
     // Focus on the new title input field
-    setTimeout(function() { $('#new-title').focus().select(); }, 500);
+    setTimeout(function() { $('#newTitle').focus().select(); }, 500);
   }
 
   $scope.inviteesEditAfter = [];
