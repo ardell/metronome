@@ -108,11 +108,11 @@ app.factory('TimeSynchronizationFactory', function(WebSocketFactory, $q) {
             }
           };
           sendPing();
-        }, 
+        },
         function() {  // error
           deferred.reject('Error: could not connect to sync service.');
           ws.close();
-        } 
+        }
       );
       return deferred.promise;
     }
@@ -179,7 +179,7 @@ function getBeatsSinceStart(offset, startTime, beatsPerMinute) {
   // how many beats in timeDiffInSeconds:
   // ====================================
   // n seconds   1 minute     96 beats   m beats
-  //           * --------   * -------- = 
+  //           * --------   * -------- =
   //             60 seconds   1 minute
   var beats = timeDiffInSeconds / 60.0 * beatsPerMinute;
   return beats;
