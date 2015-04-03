@@ -1,7 +1,6 @@
 require 'redis'
 require 'faye/websocket'
 require 'json'
-require 'observer'
 require 'pony'
 require 'erb'
 require 'ostruct'
@@ -14,8 +13,6 @@ Dir.glob(File.dirname(__FILE__) + "/../config/environments/#{settings.environmen
 # Dir.glob(File.dirname(__FILE__) + "/config/initializers/*.rb", &method(:require))
 
 class MetronomeConfig
-  include Observable
-
   ROLE_OWNER    = 'owner'
   ROLE_MAESTRO  = 'maestro'
   ROLE_MUSICIAN = 'musician'
