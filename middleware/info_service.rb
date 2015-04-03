@@ -222,7 +222,7 @@ class MetronomeConfig
 
   def _connections_for_logged_in_user
     identified_users = clients.uniq.map {|token| invitees[token] }.compact
-    anonymous_users  = clients.select {|o| o.nil?}
+    anonymous_users  = clients.select {|token| token.nil? or !invitees.has_key?(token) }
     {
       total:     identified_users.length + anonymous_users.length,
       owners:    identified_users.select {|hash| hash['role'] == ROLE_OWNER    }.map {|hash| hash['email'] },
@@ -234,7 +234,7 @@ class MetronomeConfig
 
   def _connections_for_anonymous_user
     identified_users = clients.uniq.map {|token| invitees[token] }.compact
-    anonymous_users  = clients.select {|o| o.nil?}
+    anonymous_users  = clients.select {|token| token.nil? or !invitees.has_key?(token) }
     {
       total:     identified_users.length + anonymous_users.length,
       owners:    identified_users.select {|hash| hash['role'] == ROLE_OWNER    }.length,
