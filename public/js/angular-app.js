@@ -231,6 +231,7 @@ app.factory('RunLoopFactory', function() {
       if ((this._runs * this.MIN_RESOLUTION) >= 10000) {
         // Log slow clients...
         if (1.0 * this._skips / this._runs > 0.2) {
+          ga('set', 'metric1', 1);  // metric1 is number of slowness occurrences, this line increments it
           ga('send', 'event', 'client', 'delay', 'Client is Slow');
         }
 
