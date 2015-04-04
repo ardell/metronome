@@ -797,11 +797,15 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
 
     // Update visual interface
     var newBeatDisplayClass = "beat-" + $scope.beat;
-    $scope.$apply(function() {
-      $scope.beat             = newBeat;
-      $scope.beatDisplayClass = newBeatDisplayClass;
-    });
+    $scope.beat             = newBeat;
+    $scope.beatDisplayClass = newBeatDisplayClass;
   }, 10);
+
+  // Only re-render every 50 ms (visuals are less important than sounds
+  RunLoopFactory.add(function() {
+    $scope.$digest();
+  }, 50);
+
   $scope.beatsPerMeasureDisplayClass = null;
   $scope.$watch('beatsPerMeasure', function() {
     $scope.beatsPerMeasureDisplayClass =  'beats-per-measure-' + $scope.beatsPerMeasure;
