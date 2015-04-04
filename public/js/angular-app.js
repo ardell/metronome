@@ -703,7 +703,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     $(window).trigger('settings:change');
 
     // Track in Google Analytics
-    ga('send', 'event', 'mute', newValue, 'Change Mute');
+    ga('send', 'event', 'mute', (newValue ? 'mute' : 'un-mute'), 'Change Mute');
   });
 
   $scope.$watch('presets', function(newValue, oldValue) {
