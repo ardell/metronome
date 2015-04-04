@@ -6,6 +6,10 @@ m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
 })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
 ga('create', 'UA-61520600-1', 'auto');
+ga('set', 'dimension1', (Modernizr.websockets ? '✓ (Websockets)' : '✗ (No Websockets)'));
+ga('set', 'dimension2', (Modernizr.audio      ? '✓ (Audio)'      : '✗ (No Audio)'     ));
+ga('set', 'dimension3', (Modernizr.svg        ? '✓ (SVG)'        : '✗ (No SVG)'       ));
+ga('set', 'dimension4', (Modernizr.cookies    ? '✓ (Cookies)'    : '✗ (No Cookies)'   ));
 ga('send', 'pageview');
 </script>
 <% else %>
