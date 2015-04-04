@@ -33,19 +33,6 @@ html.no-touch .show-on-touch { display: none; }
 html .hide-if-no-js { display: none; }
 html.js .hide-if-no-js { display: block; }
 
-/* NOTE: Had to make changes for the "Connected right now..." tooltip. Test when changing. */
-.tooltip.in { opacity: 1.0; }
-.tooltip-arrow {
-  border-bottom-color: #333;
-}
-.tooltip-inner {
-  max-width: 300px;
-  width: 300px;
-  background-color: #333;
-  box-shadow: -1px 1px 1px #999;
-  color: #ddd;
-}
-
 /***
  * Index page (/)
  ***/
@@ -78,7 +65,19 @@ html.js .hide-if-no-js { display: block; }
   border-top-width: 0;
   border-bottom-left-radius: 2px;
   border-bottom-right-radius: 2px;
-  box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px 0px;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px 0px;
+     -moz-box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px 0px;
+      -ms-box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px 0px;
+       -o-box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px 0px;
+          box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px 0px;
+}
+/* box-shadows are suuuuper slow on android */
+html.android .real-time-alert > div {
+  -webkit-box-shadow: none;
+     -moz-box-shadow: none;
+      -ms-box-shadow: none;
+       -o-box-shadow: none;
+          box-shadow: none;
 }
 
 .navbar { margin-bottom: 5px; }
@@ -313,7 +312,19 @@ html.touch #show-page #tap-control #tap-button.active {
   color: #ccc;
   border-radius: 3px;
   border: 1px solid #666;
-  box-shadow: -1px 2px 2px rgba(16,16,16,0.3);
+  -webkit-box-shadow: rgba(16,16,16,0.3) -1px 2px 2px;
+     -moz-box-shadow: rgba(16,16,16,0.3) -1px 2px 2px;
+      -ms-box-shadow: rgba(16,16,16,0.3) -1px 2px 2px;
+       -o-box-shadow: rgba(16,16,16,0.3) -1px 2px 2px;
+          box-shadow: rgba(16,16,16,0.3) -1px 2px 2px;
+}
+/* box-shadows are suuuuper slow on android */
+html.android .connected-user-list {
+  -webkit-box-shadow: none;
+     -moz-box-shadow: none;
+      -ms-box-shadow: none;
+       -o-box-shadow: none;
+          box-shadow: none;
 }
 
 .connected-user-list .tooltip-arrow {
