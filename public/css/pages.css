@@ -14,10 +14,11 @@ body {
 
 .no-text-select {
   -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+   -khtml-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+       -o-user-select: none;
+          user-select: none;
 }
 
 .visibility-hidden { visibility: hidden; }
@@ -163,7 +164,14 @@ button.navbar-item:last-of-type { margin-right: 8px; }
   display: none;
 }
 
-.nav-sidebar { -webkit-touch-callout: none !important; }
+.nav-sidebar {
+  -webkit-touch-callout: none !important;
+   -khtml-touch-callout: none !important;
+     -moz-touch-callout: none !important;
+      -ms-touch-callout: none !important;
+       -o-touch-callout: none !important;
+          touch-callout: none !important;
+}
 .nav-sidebar .sort-handle { display: none; }
 .nav-sidebar.sorting .sort-handle { display: inline; }
 
@@ -229,12 +237,21 @@ html.touch .nav-sidebar li.swiped:hover .actions {
   color: #282828;
   outline: 0;
   -webkit-touch-callout: none;
+   -khtml-touch-callout: none;
+     -moz-touch-callout: none;
+      -ms-touch-callout: none;
+       -o-touch-callout: none;
+          touch-callout: none;
   -webkit-transition-duration: 0.2s;
+   -khtml-transition-duration: 0.2s;
      -moz-transition-duration: 0.2s;
+      -ms-transition-duration: 0.2s;
        -o-transition-duration: 0.2s;
           transition-duration: 0.2s;
   -webkit-transition-timing-function: linear;
+   -khtml-transition-timing-function: linear;
      -moz-transition-timing-function: linear;
+      -ms-transition-timing-function: linear;
        -o-transition-timing-function: linear;
           transition-timing-function: linear;
 }
@@ -242,7 +259,9 @@ html.no-touch #show-page #tap-control #tap-button:active {
   background-color: #666666;
   color: #444444;
   -webkit-transition-duration: 0s;
+   -khtml-transition-duration: 0s;
      -moz-transition-duration: 0s;
+      -ms-transition-duration: 0s;
        -o-transition-duration: 0s;
           transition-duration: 0s;
 }
@@ -250,7 +269,9 @@ html.touch #show-page #tap-control #tap-button.active {
   background-color: #666666;
   color: #444444;
   -webkit-transition-duration: 0s;
+   -khtml-transition-duration: 0s;
      -moz-transition-duration: 0s;
+      -ms-transition-duration: 0s;
        -o-transition-duration: 0s;
           transition-duration: 0s;
 }
@@ -313,6 +334,7 @@ html.touch #show-page #tap-control #tap-button.active {
   border-radius: 3px;
   border: 1px solid #666;
   -webkit-box-shadow: rgba(16,16,16,0.3) -1px 2px 2px;
+   -khtml-box-shadow: rgba(16,16,16,0.3) -1px 2px 2px;
      -moz-box-shadow: rgba(16,16,16,0.3) -1px 2px 2px;
       -ms-box-shadow: rgba(16,16,16,0.3) -1px 2px 2px;
        -o-box-shadow: rgba(16,16,16,0.3) -1px 2px 2px;
@@ -321,6 +343,7 @@ html.touch #show-page #tap-control #tap-button.active {
 /* box-shadows are suuuuper slow on android */
 html.android .connected-user-list {
   -webkit-box-shadow: none;
+   -khtml-box-shadow: none;
      -moz-box-shadow: none;
       -ms-box-shadow: none;
        -o-box-shadow: none;
@@ -337,6 +360,7 @@ html.android .connected-user-list {
   top: -5px;
   border-width: 1px 0 0 1px;
   -webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
+   -khtml-transform: rotate(45deg); /* Konquerer? */
      -moz-transform: rotate(45deg); /* Firefox */
       -ms-transform: rotate(45deg); /* IE 9 */
        -o-transform: rotate(45deg); /* Opera */
