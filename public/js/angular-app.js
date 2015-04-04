@@ -208,8 +208,14 @@ app.factory('RunLoopFactory', function() {
         // Skip this task if it's not time to run it yet
         if (currentTime < obj.nextRunAt) { return; }
 
+        // Skip this run of the job if we're way behind
+        var newNextRunAt = obj.nextRunAt + obj.intervalInMs;
+        if (currentTime > newNextRunAt) {
+          _this._tasks[i].nextRunAt = obj.nextRunAt + obj.intervalInMs*2;
+          return;
+        }
+
         // Run the task
-        var newNextRunAt          = obj.nextRunAt + obj.intervalInMs;
         _this._tasks[i].nextRunAt = newNextRunAt;
         obj.fn();
       });
@@ -221,7 +227,7 @@ app.factory('RunLoopFactory', function() {
       this._tasks.push({
         fn:           fn,
         nextRunAt:    (window.performance.now() + intervalInMs),
-        intervalInMs: intervalInMs
+        intervalInMs: Math.max(this.MIN_RESOLUTION, intervalInMs)
       });
     },
   };
@@ -772,16 +778,15 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   $scope.beat             = null;
   $scope.beatDisplayClass = null;
   RunLoopFactory.add(function() {
-    $scope.$apply(function() {
-      if (!$scope.offset || !$scope.startTime || !$scope.beatsPerMinute || !$scope.beatsPerMeasure) return;
-      $scope.beat = getBeat(
-        $scope.offset,
-        $scope.startTime,
-        $scope.beatsPerMinute,
-        $scope.beatsPerMeasure
-      );
-      $scope.beatDisplayClass = "beat-" + $scope.beat;
-    });
+    if (!$scope.offset || !$scope.startTime || !$scope.beatsPerMinute || !$scope.beatsPerMeasure) return;
+    $scope.beat = getBeat(
+      $scope.offset,
+      $scope.startTime,
+      $scope.beatsPerMinute,
+      $scope.beatsPerMeasure
+    );
+    var beatDisplayClass = "beat-" + $scope.beat;
+    $scope.$apply(function() { $scope.beatDisplayClass = beatDisplayClass });
   }, 10);
   $scope.beatsPerMeasureDisplayClass = null;
   $scope.$watch('beatsPerMeasure', function() {
