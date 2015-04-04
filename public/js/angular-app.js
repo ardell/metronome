@@ -779,27 +779,32 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   $scope.beatDisplayClass = null;
   RunLoopFactory.add(function() {
     if (!$scope.offset || !$scope.startTime || !$scope.beatsPerMinute || !$scope.beatsPerMeasure) return;
-    $scope.beat = getBeat(
+    var newBeat = getBeat(
       $scope.offset,
       $scope.startTime,
       $scope.beatsPerMinute,
       $scope.beatsPerMeasure
     );
-    var beatDisplayClass = "beat-" + $scope.beat;
-    $scope.$apply(function() { $scope.beatDisplayClass = beatDisplayClass });
+
+    // When beat changes, play a sound
+    if (newBeat != $scope.beat) {
+      if (newBeat == 1 && $scope.beatsPerMeasure != 'no-emphasis') {
+        $(window).trigger('tick:high');
+      } else {
+        $(window).trigger('tick:low');
+      }
+    }
+
+    // Update visual interface
+    var newBeatDisplayClass = "beat-" + $scope.beat;
+    $scope.$apply(function() {
+      $scope.beat             = newBeat;
+      $scope.beatDisplayClass = newBeatDisplayClass;
+    });
   }, 10);
   $scope.beatsPerMeasureDisplayClass = null;
   $scope.$watch('beatsPerMeasure', function() {
     $scope.beatsPerMeasureDisplayClass =  'beats-per-measure-' + $scope.beatsPerMeasure;
-  });
-
-  // When beat changes, play a sound
-  $scope.$watch('beat', function() {
-    if ($scope.beat == 1 && $scope.beatsPerMeasure != 'no-emphasis') {
-      $(window).trigger('tick:high');
-    } else {
-      $(window).trigger('tick:low');
-    }
   });
 
   function loadSounds($scope) {
