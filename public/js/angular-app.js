@@ -209,7 +209,7 @@ app.factory('RunLoopFactory', function() {
         if (currentTime < obj.nextRunAt) { return; }
 
         // Run the task
-        var newNextRunAt         = obj.nextRunAt + obj.intervalInMs;
+        var newNextRunAt          = obj.nextRunAt + obj.intervalInMs;
         _this._tasks[i].nextRunAt = newNextRunAt;
         obj.fn();
       });
