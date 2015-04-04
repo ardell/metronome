@@ -476,16 +476,20 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   var infoWebSocket             = deferred.promise;
   syncResult.then(function(offset) {
     // Set up listeners for reconnecting
+    var connectedListener = null;
     $(window).on('websocket:reconnecting', function() {
       // Show reconnecting alert
       $('#real-time-alert').html('Connection lost, reconnecting...');
       $('.real-time-alert').show();
 
       // Listen (.one) for websocket:connected
-      $(window).one('websocket:connected', function() {
-        $('#real-time-alert').html('Connection lost, reconnecting... Success.');
-        $('.real-time-alert').delay(600).fadeOut();
-      });
+      if (!connectedListener) {
+        connectedListener = $(window).one('websocket:connected', function() {
+          connectedListener = null;
+          $('#real-time-alert').html('Connection lost, reconnecting... Success.');
+          $('.real-time-alert').delay(600).fadeOut();
+        });
+      }
     });
 
     var slug = window.location.pathname.substring(1);
