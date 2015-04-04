@@ -411,7 +411,7 @@ app.controller('SharingController', function($scope) {
 
   $scope.handlePublicSharingChange = _.debounce(function(newValue) {
     // track in google analytics
-    ga('send', 'event', 'public', newValue, 'Change Public Sharing');
+    ga('send', 'event', 'public', (newValue ? 'public' : 'private'), 'Change Public Sharing');
   }, 250);
 
   $scope.save = function() {
