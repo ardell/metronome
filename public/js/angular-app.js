@@ -195,13 +195,16 @@ function getBeat(offset, startTime, beatsPerMinute, beatsPerMeasure) {
 
 app.factory('RunLoopFactory', function() {
   var runLoop = {
-    MIN_RESOLUTION: 10,  // ms
+    MIN_RESOLUTION: 15,  // ms
     _tasks: [],
+    _runs:  0,
+    _skips: 0,
     _init: function() {
       var _this = this;
       setInterval(function() { _this._run(); }, this.MIN_RESOLUTION);
     },
     _run: function() {
+      this._runs++;
       var _this = this;
       var currentTime = window.performance.now();
       _.each(this._tasks, function(obj, i) {
@@ -211,7 +214,11 @@ app.factory('RunLoopFactory', function() {
         // Skip this run of the job if we're way behind
         var newNextRunAt = obj.nextRunAt + obj.intervalInMs;
         if (currentTime > newNextRunAt) {
-          _this._tasks[i].nextRunAt = obj.nextRunAt + obj.intervalInMs*2;
+          while (currentTime > newNextRunAt) {
+            _this._skips++;
+            newNextRunAt += obj.intervalInMs;
+          }
+          _this._tasks[i].nextRunAt = newNextRunAt;
           return;
         }
 
@@ -219,6 +226,18 @@ app.factory('RunLoopFactory', function() {
         _this._tasks[i].nextRunAt = newNextRunAt;
         obj.fn();
       });
+
+      // Sample every 10 seconds
+      if ((this._runs * this.MIN_RESOLUTION) >= 10000) {
+        // Log slow clients...
+        if (1.0 * this._skips / this._runs > 0.2) {
+          ga('send', 'event', 'client', 'delay', 'Client is Slow');
+        }
+
+        // Reset
+        this._runs  = 0;
+        this._skips = 0;
+      }
     },
     add: function(fn, intervalInMs) {
       if (!fn)           throw "Please specify a function to run.";
