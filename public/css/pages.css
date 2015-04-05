@@ -49,11 +49,6 @@ html.js .hide-if-no-js { display: block; }
   padding: 10px 0 0 0;
 }
 
-html.touch {
-  width:    100%;
-  position: fixed;
-}
-
 .real-time-alert {
   display: none;
   position: fixed;
@@ -113,10 +108,6 @@ button.navbar-item:last-of-type { margin-right: 8px; }
 
 /* Until we can get it styled appropriately for mobile */
 .sidebar { display: none; }
-
-html.touch .interface-body {
-  padding-bottom: 200px;
-}
 
 .metronome-body {
   max-width: 446px;
