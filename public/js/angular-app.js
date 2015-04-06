@@ -133,43 +133,37 @@ app.factory('ToneFactory', function($timeout) {
         };
       }
 
-      return {
-        context: new (window.AudioContext || window.webkitAudioContext),
-        play:    function(frequencyInHz, durationInMs) {
+      var obj = {
+        context:  null,
+        gainNode: null,
+        _init:    function() {
+          this.context  = new (window.AudioContext || window.webkitAudioContext);
+
+          this.gainNode = this.context.createGain();
+          this.gainNode.connect(this.context.destination);
+        },
+        play: function(frequencyInHz, durationInMs) {
           var now = this.context.currentTime;
 
-          // Create gain node to control envelope
-          var gainNode = this.context.createGain();
-          gainNode.connect(this.context.destination);
-          gainNode.gain.setValueAtTime(0, now);
-          gainNode.gain.linearRampToValueAtTime(1.0, now + durationInMs/1000.0/100.0);
-          gainNode.gain.linearRampToValueAtTime(0.0, now + durationInMs/1000.0);
-
-          // Allow playing multiple pitches at the same time
-          var frequencies = frequencyInHz;
-          if (!_.isObject(frequencyInHz)) {
-            frequencies = {};
-            frequencies[frequencyInHz] = 1.0;
-          }
+          // Control envelope
+          this.gainNode.gain.setValueAtTime(0, now);
+          this.gainNode.gain.linearRampToValueAtTime(1.0, now + durationInMs/1000.0/100.0);
+          this.gainNode.gain.linearRampToValueAtTime(0.0, now + durationInMs/1000.0);
 
           // Create oscillator to play sound
-          var _context = this.context;
-          _.each(frequencies, function(gain, frequency) {
-            var individualGainNode = _context.createGain();
-            individualGainNode.connect(gainNode);
-            individualGainNode.gain.setValueAtTime(gain, now);
-
-            var oscillator = _context.createOscillator();
-            oscillator.type = 'sine';
-            oscillator.frequency.value = frequency;
-            oscillator.connect(individualGainNode);
-            if (oscillator.noteOn) oscillator.start = oscillator.noteOn;
-            if (oscillator.noteOff) oscillator.stop = oscillator.noteOff;
-            oscillator.start(now);
-            oscillator.stop(now + durationInMs/1000.0);
-          });
+          var oscillator             = this.context.createOscillator();
+          oscillator.type            = 'sine';
+          oscillator.frequency.value = 10;
+          oscillator.connect(this.gainNode);
+          if (oscillator.noteOn)  oscillator.start = oscillator.noteOn;
+          if (oscillator.noteOff) oscillator.stop  = oscillator.noteOff;
+          oscillator.frequency.value = frequencyInHz;
+          oscillator.start(now);
+          oscillator.stop(now + durationInMs/1000.0);
         }
       };
+      obj._init();
+      return obj;
     }
   };
 }, ['$timeout']);
@@ -667,11 +661,6 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
       case 'a':    $scope.frequencies = [ 880.000, 440.000 ]; break;
       case 'bb':   $scope.frequencies = [ 932.328, 466.164 ]; break;
       case 'b':    $scope.frequencies = [ 987.767, 493.883 ]; break;
-      // case 'tock': $scope.frequencies = [
-      //     { 261:  0.25, 580:  0.25, 822:  0.5, 1080: 1.0, 1266: 0.75, 1360: 0.5, 1545: 0.25, 1658: 0.25, },
-      //     { 261:  0.25, 580:  0.25, 822:  0.5, 1080: 1.0, 1266: 0.75, 1360: 0.5, 1545: 0.25, 1658: 0.25, }
-      //   ];
-      //   break;
       default:     $scope.frequencies = [ 880.000, 440.000 ]; break;
     };
 
