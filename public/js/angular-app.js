@@ -78,9 +78,9 @@ app.factory('TimeSynchronizationFactory', function(WebSocketFactory, $q) {
             obj.connection.send(requestStartTime);
           };
           obj.connection.onmessage = function(message) {
-            data = $.parseJSON(message.data);
-            var serverReportedOffset   = data.offset;
             var requestEndTime         = window.performance.now() / 1000.0;
+            var data                   = $.parseJSON(message.data);
+            var serverReportedOffset   = data.offset;
             var clientCalculatedOffset = data.time - requestEndTime;
             offset = (serverReportedOffset + clientCalculatedOffset) / 2;
             results.push(offset);
