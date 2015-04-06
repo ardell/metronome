@@ -207,7 +207,8 @@ app.factory('RunLoopFactory', function() {
       this._runs++;
       var _this = this;
       var currentTime = window.performance.now();
-      _.each(this._tasks, function(obj, i) {
+      var tasks = this._tasks;
+      _.each(tasks, function(obj, i) {
         // Skip this task if it's not time to run it yet
         if (currentTime < obj.nextRunAt) { return; }
 
