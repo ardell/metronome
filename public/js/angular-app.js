@@ -466,15 +466,13 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   syncResult.then(function(val) { $scope.offset = val; });
 
   // Check modernizr to see whether the browser meets our requirements
-  $scope.requirementMet = function(requirement) {
-    if (requirement == 'js') return true;
-    return Modernizr[requirement];
-  };
-  $scope.allRequirementsMet = function() {
-    return $scope.requirementMet('js')
-      && $scope.requirementMet('websockets')
-      && $scope.requirementMet('svg')
-      && $scope.requirementMet('audio');
+  $scope.requirementMet = {
+    js:         true,
+    websockets: Modernizr['websockets'],
+    svg:        Modernizr['svg'],
+    audio:      Modernizr['audio'],
+    cookies:    Modernizr['cookies'],
+    all:        Modernizr['websockets'] && Modernizr['svg'] && Modernizr['audio']
   };
 
   // We won't record any changes until settings are loaded from the server

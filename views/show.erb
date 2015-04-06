@@ -38,33 +38,33 @@
     </div>
 
     <div class="container-fluid">
-      <div class="requirements" ng-hide="allRequirementsMet()" ng-cloak>
+      <div class="requirements" ng-hide="requirementMet.all" ng-cloak>
         <h4>Please upgrade to a modern browser</h4>
         <p>Your browser is missing one or more requirements to run this page:</p>
         <ul class="list-unstyled">
           <li>
-            <span class="glyphicon glyphicon-ok" ng-show="requirementMet('js')"></span>
-            <span class="glyphicon glyphicon-remove" ng-hide="requirementMet('js')"></span>
+            <span class="glyphicon glyphicon-ok" ng-show="requirementMet.js"></span>
+            <span class="glyphicon glyphicon-remove" ng-hide="requirementMet.js"></span>
             Javascript
           </li>
           <li>
-            <span class="glyphicon glyphicon-ok" ng-show="requirementMet('websockets')"></span>
-            <span class="glyphicon glyphicon-remove" ng-hide="requirementMet('websockets')"></span>
+            <span class="glyphicon glyphicon-ok" ng-show="requirementMet.websockets"></span>
+            <span class="glyphicon glyphicon-remove" ng-hide="requirementMet.websockets"></span>
             WebSockets
           </li>
           <li>
-            <span class="glyphicon glyphicon-ok" ng-show="requirementMet('svg')"></span>
-            <span class="glyphicon glyphicon-remove" ng-hide="requirementMet('svg')"></span>
+            <span class="glyphicon glyphicon-ok" ng-show="requirementMet.svg"></span>
+            <span class="glyphicon glyphicon-remove" ng-hide="requirementMet.svg"></span>
             SVG
           </li>
           <li>
-            <span class="glyphicon glyphicon-ok" ng-show="requirementMet('audio')"></span>
-            <span class="glyphicon glyphicon-remove" ng-hide="requirementMet('audio')"></span>
+            <span class="glyphicon glyphicon-ok" ng-show="requirementMet.audio"></span>
+            <span class="glyphicon glyphicon-remove" ng-hide="requirementMet.audio"></span>
             HTML5 Web Audio
           </li>
           <li>
-            <span class="glyphicon glyphicon-ok" ng-show="requirementMet('cookies')"></span>
-            <span class="glyphicon glyphicon-remove" ng-hide="requirementMet('cookies')"></span>
+            <span class="glyphicon glyphicon-ok" ng-show="requirementMet.cookies"></span>
+            <span class="glyphicon glyphicon-remove" ng-hide="requirementMet.cookies"></span>
             Cookies
           </li>
         </ul>
@@ -92,11 +92,11 @@
         </ul>
       </div>
 
-      <div ng-show="allRequirementsMet() && !offset" ng-cloak class="loading-indicator">
+      <div ng-show="requirementMet.all && !offset" ng-cloak class="loading-indicator">
         Loading...
       </div>
 
-      <div ng-show="allRequirementsMet() && offset" ng-cloak>
+      <div ng-show="requirementMet.all && offset" ng-cloak>
         <div class="row">
           <div class="col-xs-12 col-sm-4 sidebar">
             <h4>
