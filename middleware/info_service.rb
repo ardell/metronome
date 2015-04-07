@@ -28,7 +28,7 @@ class MetronomeConfig
   attr_accessor :clients
   attr_accessor :invitees
   attr_accessor :isPublic
-  attr_accessor :startTime
+  attr_accessor :startTimeInMs
 
   def initialize(title, slug, email)
     @title           = title
@@ -42,7 +42,7 @@ class MetronomeConfig
     @clients         = []
     @invitees        = {}
     @isPublic        = true
-    @startTime       = Time.now.to_f
+    @startTimeInMs   = Time.now.to_f * 1000.0
   end
 
   def invite(email, role)
@@ -110,7 +110,7 @@ class MetronomeConfig
       clients:         @clients,
       invitees:        @invitees,
       isPublic:        @isPublic,
-      startTime:       @startTime,
+      startTimeInMs:   @startTimeInMs,
     }
   end
 
@@ -132,7 +132,7 @@ class MetronomeConfig
       connections:     _connections_for_logged_in_user,
       invitees:        @invitees.values,
       isPublic:        @isPublic,
-      startTime:       @startTime,
+      startTimeInMs:   @startTimeInMs,
     }
   end
 
@@ -153,7 +153,7 @@ class MetronomeConfig
       presets:         @presets,
       connections:     _connections_for_logged_in_user,
       isPublic:        @isPublic,
-      startTime:       @startTime,
+      startTimeInMs:   @startTimeInMs,
     }
   end
 
@@ -174,7 +174,7 @@ class MetronomeConfig
       presets:         @presets,
       connections:     _connections_for_logged_in_user,
       isPublic:        @isPublic,
-      startTime:       @startTime,
+      startTimeInMs:   @startTimeInMs,
     }
   end
 
@@ -195,7 +195,7 @@ class MetronomeConfig
       presets:         @presets,
       connections:     _connections_for_anonymous_user,
       isPublic:        @isPublic,
-      startTime:       @startTime,
+      startTimeInMs:   @startTimeInMs,
     }
   end
 
@@ -214,7 +214,7 @@ class MetronomeConfig
     metronome.clients         = hash['clients'] || []
     metronome.invitees        = hash['invitees'] || {}
     metronome.isPublic        = hash['isPublic']
-    metronome.startTime       = hash['startTime']
+    metronome.startTimeInMs   = hash['startTimeInMs'] || (Time.now.to_f/1000.0)
     metronome
   end
 
@@ -405,7 +405,7 @@ module Metronome
           metronome.key             = hash['key']             if hash.has_key?('key')
           metronome.muted           = hash['muted']           if hash.has_key?('muted')
           metronome.presets         = hash['presets']         if hash.has_key?('presets')
-          metronome.startTime       = hash['startTime']       if hash.has_key?('startTime')
+          metronome.startTimeInMs   = hash['startTimeInMs']   if hash.has_key?('startTimeInMs')
 
           # Permit certain changes only if user is an owner
           if invitee['role'] == MetronomeConfig::ROLE_OWNER

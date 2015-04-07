@@ -10,7 +10,11 @@ function median(values) {
   }
 }
 
-function variance(values){
+function stdev(values) {
+  return Math.sqrt(variance(values));
+};
+
+function variance(values) {
   var mean = _.mean(values);
   var dev  = _.map(values, function(item){ return (item-mean)*(item-mean); });
   return dev.reduce(function(a, b){ return a+b; })/values.length;
@@ -59,7 +63,7 @@ app.factory('WebSocketFactory', function($q) {
   };
 }, ['$q']);
 
-app.factory('TimeSynchronizationFactory', function(WebSocketFactory, $q) {
+app.factory('TimeSynchronizationFactory', function(WebSocketFactory, TonePlayer, $q) {
   return {
     getOffset: function() {
       var uri = "ws://" + window.document.location.host + "/time";
@@ -69,16 +73,16 @@ app.factory('TimeSynchronizationFactory', function(WebSocketFactory, $q) {
       ws.then(
         function(obj) {  // success
           // Send N pings in a row and take the median offset
-          var MEASUREMENTS     = 10;
-          var results          = [];
-          var requestStartTime = null;
+          var MEASUREMENTS         = 10;
+          var results              = [];
+          var requestStartTime     = null;
 
           function sendPing() {
-            requestStartTime = window.performance.now() / 1000.0;
+            requestStartTime = performance.now();  // NOTE: we use the performance API here because the audio context timer doesn't start on iOS until the user touches the screen
             obj.connection.send(requestStartTime);
           };
           obj.connection.onmessage = function(message) {
-            var requestEndTime         = window.performance.now() / 1000.0;
+            var requestEndTime         = performance.now();
             var data                   = $.parseJSON(message.data);
             var serverReportedOffset   = data.offset;
             var clientCalculatedOffset = data.time - requestEndTime;
@@ -86,24 +90,25 @@ app.factory('TimeSynchronizationFactory', function(WebSocketFactory, $q) {
             results.push(offset);
 
             if (results.length < MEASUREMENTS) {
-              sendPing();
+              setTimeout(function() { sendPing(); }, 5);
             } else {
-              // Get the middle 4 results, make sure the variance is resonable
+              // Get the middle 4 results, make sure the stdev is resonable
               var closeResults = results.slice(3, 7);
-              var timeVariance = variance(closeResults);
+              var timeStdev = stdev(closeResults);
 
-              // Record variance in Google Analytics
-              ga('send', 'timing', 'offset', 'variance', timeVariance, 'Offset Variance');
+              // Record stdev in Google Analytics
+              ga('send', 'timing', 'offset', 'stdev', Math.round(timeStdev), 'Offset Stdev');
 
-              if (timeVariance > .001) {
+              var TIME_STDEV_THRESHOLD = 10.0;
+              if (timeStdev > TIME_STDEV_THRESHOLD) {
                 // Report the retry to Google Analytics
                 ga('send', 'exception', {
-                  'exDescription': "Re-syncing, variance (" + timeVariance + ") was too high (> .001).",
+                  'exDescription': "Re-syncing, stdev (" + timeStdev + ") was too high (> " + TIME_STDEV_THRESHOLD + ").",
                   'exFatal':       false
                 });
 
                 results = [];
-                sendPing();
+                setTimeout(function() { sendPing(); }, 5);
               } else {
                 obj.connection.close();
                 var offset = median(results);
@@ -121,73 +126,70 @@ app.factory('TimeSynchronizationFactory', function(WebSocketFactory, $q) {
       return deferred.promise;
     }
   };
-}, ['WebSocketFactory', '$q']);
+}, ['WebSocketFactory', 'TonePlayer', '$q']);
 
-app.factory('ToneFactory', function($timeout) {
-  return {
-    create: function() {
+app.factory('TonePlayer', function($timeout) {
+  var TonePlayer = {
+    // Singleton
+    get: function() {
+      if (!this._instance) this._instance = this._create();
+      return this._instance;
+    },
+
+    _instance: null,
+    _create: function() {
       if(!'webkitAudioContext' in window) {
         console.warn("Browser doesn't support the HTML5 Audio API.");
         return {
-          play: function(frequencyInHz, durationInMs) {}
+          play: function(frequencyInHz, startDelayInMs, durationInMs) {}
         };
       }
 
       var obj = {
-        context:  null,
-        gainNode: null,
+        _context:  null,
+        _gainNode: null,
         _init:    function() {
-          this.context  = new (window.AudioContext || window.webkitAudioContext);
+          this._context  = new (window.AudioContext || window.webkitAudioContext);
 
-          this.gainNode = this.context.createGain();
-          this.gainNode.connect(this.context.destination);
+          this._gainNode = this._context.createGain();
+          this._gainNode.connect(this._context.destination);
         },
-        play: function(frequencyInHz, durationInMs) {
-          var now = this.context.currentTime;
+        play: function(frequencyInHz, startDelayInMs, durationInMs) {
+          var now = this._context.currentTime;
+
+          // Calculate various times
+          var start = now + startDelayInMs/1000.0;
+          var peak  = start + durationInMs/1000.0/100.0;  // 1 one-hudredth of the duration
+          var end   = start + durationInMs/1000.0;
 
           // Control envelope
-          this.gainNode.gain.setValueAtTime(0, now);
-          this.gainNode.gain.linearRampToValueAtTime(1.0, now + durationInMs/1000.0/100.0);
-          this.gainNode.gain.linearRampToValueAtTime(0.0, now + durationInMs/1000.0);
+          this._gainNode.gain.setValueAtTime(0, start);
+          this._gainNode.gain.linearRampToValueAtTime(1.0, peak);
+          this._gainNode.gain.linearRampToValueAtTime(0.0, end);
 
           // Create oscillator to play sound
-          var oscillator             = this.context.createOscillator();
+          var oscillator             = this._context.createOscillator();
           oscillator.type            = 'sine';
           oscillator.frequency.value = 10;
-          oscillator.connect(this.gainNode);
+          oscillator.connect(this._gainNode);
           if (oscillator.noteOn)  oscillator.start = oscillator.noteOn;
           if (oscillator.noteOff) oscillator.stop  = oscillator.noteOff;
           oscillator.frequency.value = frequencyInHz;
-          oscillator.start(now);
-          oscillator.stop(now + durationInMs/1000.0);
+          oscillator.start(start)
+          oscillator.stop(end);
+        },
+        getTimeInMs: function() {
+          return this._context.currentTime * 1000.0;
         }
       };
       obj._init();
       return obj;
     }
   };
+  return TonePlayer;
 }, ['$timeout']);
 
-function getServerTime(offset) {
-  return window.performance.now() / 1000.0 + offset;
-};
-function getBeatsSinceStart(offset, startTime, beatsPerMinute) {
-  var currentTime       = getServerTime(offset);
-  var timeDiffInSeconds = currentTime - startTime;
-  // how many beats in timeDiffInSeconds:
-  // ====================================
-  // n seconds   1 minute     96 beats   m beats
-  //           * --------   * -------- =
-  //             60 seconds   1 minute
-  var beats = timeDiffInSeconds / 60.0 * beatsPerMinute;
-  return beats;
-};
-function getBeat(offset, startTime, beatsPerMinute, beatsPerMeasure) {
-  if (beatsPerMeasure == 'no-emphasis') beatsPerMeasure = 2;
-  return Math.floor(getBeatsSinceStart(offset, startTime, beatsPerMinute)) % beatsPerMeasure + 1;
-};
-
-app.factory('RunLoopFactory', function() {
+app.factory('RunLoopFactory', function(TonePlayer) {
   var runLoop = {
     MIN_RESOLUTION: 15,  // ms
     _tasks: [],
@@ -200,7 +202,7 @@ app.factory('RunLoopFactory', function() {
     _run: function() {
       this._runs++;
       var _this = this;
-      var currentTime = window.performance.now();
+      var currentTime = performance.now();
       var tasks = this._tasks;
       _.each(tasks, function(obj, i) {
         // Skip this task if it's not time to run it yet
@@ -241,14 +243,14 @@ app.factory('RunLoopFactory', function() {
 
       this._tasks.push({
         fn:           fn,
-        nextRunAt:    (window.performance.now() + intervalInMs),
+        nextRunAt:    (performance.now() + intervalInMs),
         intervalInMs: Math.max(this.MIN_RESOLUTION, intervalInMs)
       });
     },
   };
   runLoop._init();
   return runLoop;
-});
+}, [ 'TonePlayer' ]);
 
 app.directive('selectOnClick', function() {
   return {
@@ -454,10 +456,30 @@ app.controller('PresetFormController', function($scope) {
   };
 });
 
-app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory, WebSocketFactory, ToneFactory, RunLoopFactory) {
+app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory, WebSocketFactory, TonePlayer, RunLoopFactory) {
+  var getServerTime = function(offsetInMs) {
+    return performance.now() + offsetInMs;
+  };
+  var getBeatsSinceStart = function(offsetInMs, startTimeInMs, beatsPerMinute) {
+    // I think this is returning incorrectly, which is causing getBeat to fail.
+    var currentTimeInMs = getServerTime(offsetInMs);
+    var timeDiffInMs    = currentTimeInMs - startTimeInMs;
+    // how many beats in timeDiffInSeconds:
+    // ====================================
+    // n ms   1 second   1 minute     96 beats   m beats
+    //      * -------- * --------   * -------- =
+    //        1000 ms    60 seconds   1 minute
+    var beats = timeDiffInMs / 1000.0 / 60.0 * beatsPerMinute;
+    return beats;
+  };
+  var getBeat = function(offsetInMs, startTimeInMs, beatsPerMinute, beatsPerMeasure) {
+    if (beatsPerMeasure == 'no-emphasis') beatsPerMeasure = 2;
+    return Math.floor(getBeatsSinceStart(offsetInMs, startTimeInMs, beatsPerMinute)) % beatsPerMeasure + 1;
+  };
+
   // Sync time via websocket service (and return a promise that will resolve to offset when time is sufficiently accurate)
   var syncResult = TimeSynchronizationFactory.getOffset();
-  syncResult.then(function(val) { $scope.offset = val; });
+  syncResult.then(function(val) { $scope.offsetInMs = val; });
 
   // Check modernizr to see whether the browser meets our requirements
   $scope.requirementMet = {
@@ -483,11 +505,11 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   $scope.role                   = null;
   $scope.connections            = null;
   $scope.invitees               = null;
-  $scope.startTime              = getServerTime($scope.offset);
+  $scope.startTimeInMs          = getServerTime($scope.offsetInMs);
   $scope.isNumber               = angular.isNumber;
   var deferred                  = $q.defer();
   var infoWebSocket             = deferred.promise;
-  syncResult.then(function(offset) {
+  syncResult.then(function(offsetInMs) {
     // Set up listeners for reconnecting
     var connectedListener = null;
     $(window).on('websocket:reconnecting', function() {
@@ -529,7 +551,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
           $scope.role            = data.role;
           $scope.connections     = data.connections;
           $scope.invitees        = data.invitees;
-          $scope.startTime       = data.startTime;
+          $scope.startTimeInMs   = data.startTimeInMs;
           _.each(data.presets, function(preset) {
             $scope.presets.push({
               title:           preset.title,
@@ -550,7 +572,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   var handleTempoEdit = function() {
     $scope.$apply(function() {
       $scope.beatsPerMinute = Math.round($scope.editableBeatsPerMinute * 10.0) / 10.0;
-      $scope.startTime      = getServerTime($scope.offset);
+      $scope.startTimeInMs  = getServerTime($scope.offsetInMs);
       $el.val($scope.beatsPerMinute.toFixed(1));
       $(window).trigger('settings:change');
 
@@ -570,20 +592,20 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   });
 
   $scope.loadPreset = function(preset) {
-    var serverTime = getServerTime($scope.offset);
+    var serverTimeInMs = getServerTime($scope.offsetInMs);
 
     // Don't do anything unless something's different
     var oldHash = {
       key:             $scope.key,
       beatsPerMinute:  $scope.beatsPerMinute,
       beatsPerMeasure: $scope.beatsPerMeasure,
-      startTime:       $scope.startTime
+      startTimeInMs:   $scope.startTimeInMs
     }
     var newHash = {
       key:             preset.key,
       beatsPerMinute:  preset.beatsPerMinute,
       beatsPerMeasure: preset.beatsPerMeasure,
-      startTime:       preset.startTime
+      startTimeInMs:   preset.startTimeInMs
     }
     if (angular.equals(oldHash, newHash)) return;
 
@@ -591,7 +613,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     $scope.key             = preset.key;
     $scope.beatsPerMinute  = preset.beatsPerMinute;
     $scope.beatsPerMeasure = preset.beatsPerMeasure;
-    $scope.startTime       = serverTime;
+    $scope.startTimeInMs   = serverTimeInMs;
     $(window).trigger('settings:change');
 
     // Track in Google Analytics
@@ -702,11 +724,12 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     $(window).trigger('settings:change');
   });
 
-  $scope.sync = function() {
-    $scope.offset = null;  // Shows loading screen
-    var syncResult = TimeSynchronizationFactory.getOffset();
-    syncResult.then(function(val) { $scope.offset = val; });
-  };
+  // Deprecated
+  // $scope.sync = function() {
+  //   $scope.offsetInMs = null;  // Shows loading screen
+  //   var syncResult = TimeSynchronizationFactory.getOffset();
+  //   syncResult.then(function(val) { $scope.offsetInMs = val; });
+  // };
 
   var recentTaps = [];
   var setTempo = function() {
@@ -749,12 +772,12 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   if (Modernizr.touch) eventType = 'touchstart';
   var button = $('#tap-button');
   button.on(eventType, function() {
-    var serverTime = getServerTime($scope.offset);
+    var serverTimeInMs = getServerTime($scope.offsetInMs);
     recentTaps.push(serverTime);
 
     // If this is the first tap of the measure, recent start time
     if (recentTaps.length % $scope.beatsPerMeasure == 1) {
-      $scope.$apply(function() { $scope.startTime = serverTime; });
+      $scope.$apply(function() { $scope.startTimeInMs = serverTimeInMs; });
     }
 
     setTempo();
@@ -781,41 +804,68 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
         presets:         $scope.presets,
         isPublic:        $scope.isPublic,
         invitees:        $scope.invitees,
-        startTime:       $scope.startTime
+        startTimeInMs:   $scope.startTimeInMs
       }));
     });
   });
 
-  // Display beat to the user
+  // Enqueue audio events
+  var AUDIO_LOOKAHEAD_INTERVAL = 500;  // ms
+  var tonePlayer = TonePlayer.get();
+  RunLoopFactory.add(function() {
+    if (!$scope.offsetInMs || !$scope.startTimeInMs || !$scope.beatsPerMinute || !$scope.beatsPerMeasure) return;
+    if (window.MUTED) return;
+    if ($scope.muted) return;
+    if (!document.hasFocus()) return;
+    if (document.hidden) return;
+
+    // Figure out which beats will happen in the next 500ms
+    var beats           = [];
+    var currentTime     = performance.now();
+    var startTimeInMs   = $scope.startTimeInMs - $scope.offsetInMs;
+    var lookaheadTime   = currentTime + AUDIO_LOOKAHEAD_INTERVAL;
+    var tickInterval    = 60 * 1000.0 / $scope.beatsPerMinute;
+    var beatsPerMeasure = $scope.beatsPerMeasure;
+    var next            = Math.ceil((currentTime - startTimeInMs) / tickInterval) * tickInterval + startTimeInMs;
+    while (next <= lookaheadTime) {
+      // Figure out which tone (high or low) to play
+      tone = 'low';
+      if (beatsPerMeasure != 'no-emphasis') {
+        var beat = Math.round((next - startTimeInMs) / tickInterval) % parseInt(beatsPerMeasure);
+        if (beat == 0) tone = 'high';
+      }
+
+      beats.push({ start: Math.round(next-currentTime), tone: tone });
+      next += tickInterval;
+    }
+
+    // Queue up sounds to play
+    _.each(beats, function(config) {
+      var TONE_DURATION = 80;  // ms
+      var frequency     = _.last($scope.frequencies);
+      if (config.tone == 'high') frequency = _.first($scope.frequencies);
+      tonePlayer.play(frequency, config.start, TONE_DURATION);
+    });
+  }, 250);
+
+  // Only re-render every 50 ms (visuals are less important than sounds)
   $scope.beat             = null;
   $scope.beatDisplayClass = null;
   RunLoopFactory.add(function() {
-    if (!$scope.offset || !$scope.startTime || !$scope.beatsPerMinute || !$scope.beatsPerMeasure) return;
+    if (!$scope.offsetInMs || !$scope.startTimeInMs || !$scope.beatsPerMinute || !$scope.beatsPerMeasure) return;
+
+    // Update visual interface
     var newBeat = getBeat(
-      $scope.offset,
-      $scope.startTime,
+      $scope.offsetInMs,
+      $scope.startTimeInMs,
       $scope.beatsPerMinute,
       $scope.beatsPerMeasure
     );
-
-    // When beat changes, play a sound
-    if (newBeat != $scope.beat) {
-      if (newBeat == 1 && $scope.beatsPerMeasure != 'no-emphasis') {
-        $(window).trigger('tick:high');
-      } else {
-        $(window).trigger('tick:low');
-      }
-    }
-
-    // Update visual interface
     var newBeatDisplayClass = "beat-" + $scope.beat;
-    $scope.beat             = newBeat;
-    $scope.beatDisplayClass = newBeatDisplayClass;
-  }, 10);
-
-  // Only re-render every 50 ms (visuals are less important than sounds
-  RunLoopFactory.add(function() {
-    $scope.$digest();
+    $scope.$apply(function() {
+      $scope.beat             = newBeat;
+      $scope.beatDisplayClass = newBeatDisplayClass;
+    });
   }, 50);
 
   $scope.beatsPerMeasureDisplayClass = null;
@@ -823,40 +873,15 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     $scope.beatsPerMeasureDisplayClass =  'beats-per-measure-' + $scope.beatsPerMeasure;
   });
 
-  function loadSounds($scope) {
-    var toneFactory = ToneFactory.create();
-
-    // Dummy sound: 10hz for 1ms (basically imperceptible)
-    mutedTick = function() {
-      if (window.MUTED) return;
-      if (!document.hasFocus()) return;
-      if (document.hidden) return;
-      toneFactory.play(10, 1);
-    }
-    $(document).on('click tap touchstart', mutedTick);
-
-    // High tick
-    highTick = function() {
-      if (!$scope.beatsPerMeasure) return;  // a proxy for whether we've received any info from the server yet
-      if (window.MUTED) return;
-      if ($scope.muted) return;
-      if (!document.hasFocus()) return;
-      if (document.hidden) return;
-      toneFactory.play(_.first($scope.frequencies), 80);
-    }
-    $(window).on('tick:high', highTick);
-
-    // Low tick
-    lowTick = function() {
-      if (!$scope.beatsPerMeasure) return;  // a proxy for whether we've received any info from the server yet
-      if (window.MUTED) return;
-      if ($scope.muted) return;
-      if (!document.hasFocus()) return;
-      if (document.hidden) return;
-      toneFactory.play(_.last($scope.frequencies), 80);
-    }
-    $(window).on('tick:low', lowTick);
-  };
-  loadSounds($scope);
-}, ['$q', 'TimeSynchronizationFactory', 'WebSocketFactory', 'ToneFactory']);
+  // Mute sounds when the user is interacting with the interface
+  // Dummy sound: 10hz for 1ms (basically imperceptible)
+  var tonePlayer = TonePlayer.get();
+  mutedTick = function() {
+    if (window.MUTED) return;
+    if (!document.hasFocus()) return;
+    if (document.hidden) return;
+    tonePlayer.play(10, 0, 1);
+  }
+  $(document).on('click tap touchstart', mutedTick);
+}, ['$q', 'TimeSynchronizationFactory', 'WebSocketFactory', 'TonePlayer']);
 

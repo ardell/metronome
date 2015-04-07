@@ -92,11 +92,11 @@
         </ul>
       </div>
 
-      <div ng-show="requirementMet.all && !offset" ng-cloak class="loading-indicator">
+      <div ng-show="requirementMet.all && !offsetInMs" ng-cloak class="loading-indicator">
         Loading...
       </div>
 
-      <div ng-show="requirementMet.all && offset" ng-cloak>
+      <div ng-show="requirementMet.all && offsetInMs" ng-cloak>
         <div class="row">
           <div class="col-xs-12 col-sm-4 sidebar">
             <h4>
@@ -256,7 +256,7 @@
             </div>
           </div> <!-- .col-xs-12.col-sm-8.col-sm-offset-4 disable-touchmove -->
         </div> <!-- .row -->
-      </div> <!-- ng-show="offset" -->
+      </div> <!-- ng-show="offsetInMs" -->
     </div> <!-- .container-fluid -->
 
     <div class="modal fade preset-form-dialog" tabindex="-1" role="dialog" aria-hidden="true" ng-controller="PresetFormController">

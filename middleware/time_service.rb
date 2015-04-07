@@ -27,7 +27,7 @@ module Metronome
 
       ws.on :message do |event|
         client = event.data.to_f
-        server = Time.now.to_f
+        server = Time.now.to_f * 1000.0
         offset = server - client
 
         obj = {
