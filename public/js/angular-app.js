@@ -855,7 +855,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   // Only re-render every 50 ms (visuals are less important than sounds)
   $scope.beat             = null;
   $scope.beatDisplayClass = null;
-  RunLoopFactory.add(function() {
+  setInterval(function() {
     if (!$scope.offsetInMs || !$scope.startTimeInMs || !$scope.beatsPerMinute || !$scope.beatsPerMeasure) return;
 
     // Update visual interface
