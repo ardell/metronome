@@ -78,11 +78,11 @@ app.factory('TimeSynchronizationFactory', function(WebSocketFactory, TonePlayer,
           var requestStartTime     = null;
 
           function sendPing() {
-            requestStartTime = performance.now();  // NOTE: we use the performance API here because the audio context timer doesn't start on iOS until the user touches the screen
+            requestStartTime = TonePlayer.get().getTimeInMs();
             obj.connection.send(requestStartTime);
           };
           obj.connection.onmessage = function(message) {
-            var requestEndTime         = performance.now();
+            var requestEndTime         = TonePlayer.get().getTimeInMs();
             var data                   = $.parseJSON(message.data);
             var serverReportedOffset   = data.offset;
             var clientCalculatedOffset = data.time - requestEndTime;
@@ -191,7 +191,7 @@ app.factory('TonePlayer', function($timeout) {
 
 app.factory('RunLoopFactory', function(TonePlayer) {
   var runLoop = {
-    MIN_RESOLUTION: 15,  // ms
+    MIN_RESOLUTION: 50,  // ms
     _tasks: [],
     _runs:  0,
     _skips: 0,
@@ -202,7 +202,7 @@ app.factory('RunLoopFactory', function(TonePlayer) {
     _run: function() {
       this._runs++;
       var _this = this;
-      var currentTime = performance.now();
+      var currentTime = TonePlayer.get().getTimeInMs();
       var tasks = this._tasks;
       _.each(tasks, function(obj, i) {
         // Skip this task if it's not time to run it yet
@@ -243,7 +243,7 @@ app.factory('RunLoopFactory', function(TonePlayer) {
 
       this._tasks.push({
         fn:           fn,
-        nextRunAt:    (performance.now() + intervalInMs),
+        nextRunAt:    (TonePlayer.get().getTimeInMs() + intervalInMs),
         intervalInMs: Math.max(this.MIN_RESOLUTION, intervalInMs)
       });
     },
@@ -458,7 +458,7 @@ app.controller('PresetFormController', function($scope) {
 
 app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory, WebSocketFactory, TonePlayer, RunLoopFactory) {
   var getServerTime = function(offsetInMs) {
-    return performance.now() + offsetInMs;
+    return TonePlayer.get().getTimeInMs() + offsetInMs;
   };
   var getBeatsSinceStart = function(offsetInMs, startTimeInMs, beatsPerMinute) {
     // I think this is returning incorrectly, which is causing getBeat to fail.
@@ -822,7 +822,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
 
     // Figure out which beats will happen in the next 500ms
     var beats           = [];
-    var currentTime     = performance.now();
+    var currentTime     = TonePlayer.get().getTimeInMs();
     var startTimeInMs   = $scope.startTimeInMs - $scope.offsetInMs;
     var lookaheadTime   = currentTime + AUDIO_LOOKAHEAD_INTERVAL;
     var tickInterval    = 60 * 1000.0 / $scope.beatsPerMinute;
