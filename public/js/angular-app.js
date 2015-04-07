@@ -434,6 +434,12 @@ app.controller('SharingController', function($scope) {
   };
 });
 
+app.controller('IosInitController', function($scope) {
+  $scope.dismissModal = function() {
+    $('.ios-init-dialog').modal('hide');
+  };
+});
+
 app.controller('PresetFormController', function($scope) {
   $scope.form       = {};
   $scope.savePreset = function() {
@@ -458,6 +464,11 @@ app.controller('PresetFormController', function($scope) {
 });
 
 app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory, WebSocketFactory, TonePlayer, RunLoopFactory) {
+  if (device.ios()) {
+    // Show modal
+    $('.ios-init-dialog').modal('show');
+  }
+
   var getServerTime = function(offsetInMs) {
     return TonePlayer.get().getTimeInMs() + offsetInMs;
   };

@@ -467,9 +467,10 @@
                   <a href="http://www.shared-metronome.com/<%= @slug %>">
                     http://www.shared-metronome.com/<%= @slug %>
                   </a>
+                </div>
               </div>
             </div>
-          </div>
+          </div> <!-- .modal-body -->
 
           <div class="modal-footer">
             <a class="btn btn-default clickable" ng-click="dismissModal()">
@@ -477,6 +478,28 @@
             </a>
             <a class="btn btn-primary clickable" ng-click="save()">
               Save
+            </a>
+          </div>
+        </div> <!-- .modal-content -->
+      </div> <!-- .modal-lg -->
+    </div> <!-- .sharing-dialog -->
+
+    <div class="modal fade ios-init-dialog" tabindex="-1" role="dialog" aria-hidden="true" ng-controller="IosInitController">
+      <div class="modal-sm">
+        <div class="modal-content">
+          <div class="modal-body">
+            <p>
+              To avoid interruptions while using the metronome you might want to
+              enable <em>Do Not Disturb</em> mode on your device.
+            </p>
+            <p>
+              To do so, go to <code>Settings &rarr; Do Not Disturb</code>
+            </p>
+          </div>
+
+          <div class="modal-footer">
+            <a class="btn btn-primary clickable" ng-click="dismissModal()">
+              Got it, thanks.
             </a>
           </div>
         </div>
