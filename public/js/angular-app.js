@@ -760,7 +760,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
         return [ arr[1]-arr[0] ].concat(calculateDiff(arr.slice(1, arr.length)));
       };
       var differences          = calculateDiff(recentTaps);
-      var medianSecondsPerBeat = median(differences);
+      var medianSecondsPerBeat = median(differences) / 1000.0;
       var beatsPerMinute       = Math.round(60.0 / medianSecondsPerBeat * 10.0) / 10.0;
 
       // Return unless something is different
@@ -785,7 +785,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   var button = $('#tap-button');
   button.on(eventType, function() {
     var serverTimeInMs = getServerTime($scope.offsetInMs);
-    recentTaps.push(serverTime);
+    recentTaps.push(serverTimeInMs);
 
     // If this is the first tap of the measure, recent start time
     if (recentTaps.length % $scope.beatsPerMeasure == 1) {
