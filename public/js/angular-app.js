@@ -92,13 +92,14 @@ app.factory('TimeSynchronizationFactory', function(WebSocketFactory, TonePlayer,
             if (results.length < MEASUREMENTS) {
               setTimeout(function() { sendPing(); }, 5);
             } else {
-              // Get the middle 4 results, make sure the stdev is resonable
+              // Calculate stdev for the middle 4 results
               var closeResults = results.slice(3, 7);
               var timeStdev = stdev(closeResults);
 
               // Record stdev in Google Analytics
               ga('send', 'timing', 'offset', 'stdev', Math.round(timeStdev), 'Offset Stdev');
 
+              // Make sure stdev is reasonable, otherwise re-sync
               var TIME_STDEV_THRESHOLD = 10.0;
               if (timeStdev > TIME_STDEV_THRESHOLD) {
                 // Report the retry to Google Analytics
