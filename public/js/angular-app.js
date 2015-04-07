@@ -812,6 +812,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   // Enqueue audio events
   var AUDIO_LOOKAHEAD_INTERVAL = 500;  // ms
   var tonePlayer = TonePlayer.get();
+  var lastBeat = null;
   RunLoopFactory.add(function() {
     if (!$scope.offsetInMs || !$scope.startTimeInMs || !$scope.beatsPerMinute || !$scope.beatsPerMeasure) return;
     if (window.MUTED) return;
@@ -835,7 +836,10 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
         if (beat == 0) tone = 'high';
       }
 
-      beats.push({ start: Math.round(next-currentTime), tone: tone });
+      if (lastBeat != next) {
+        lastBeat = next;
+        beats.push({ start: Math.round(next-currentTime), tone: tone });
+      }
       next += tickInterval;
     }
 
