@@ -34,6 +34,9 @@ html.no-touch .show-on-touch { display: none; }
 html .hide-if-no-js { display: none; }
 html.js .hide-if-no-js { display: block; }
 
+html .show-on-android { display: none; }
+html.android .show-on-android { display: block; }
+
 /***
  * Index page (/)
  ***/
@@ -402,5 +405,16 @@ html.android .connected-user-list {
 .mute-button.mute-on {
   background: #d9534f;
   color: #fff;
+}
+
+.additional-offset {
+  padding-top: 18px;
+  text-align: center;
+}
+.additional-offset .slider-selection.tick-slider-selection {
+  display: none;
+}
+.additional-offset .slider-tick.in-selection {
+  background-image: linear-gradient(to bottom, #f9f9f9 0%, #f5f5f5 100%);
 }
 

@@ -358,6 +358,15 @@ app.directive('disableTouchmove', function(){
   };
 });
 
+app.directive('slider', function(){
+  return {
+    restrict: 'A',
+    link: function(scope, element, attrs, modelCtrl) {
+      $(element).slider({ value: 0 });
+    }
+  };
+});
+
 app.controller('IndexController', function($scope) {
   $scope.slug = "";
   $scope.url = function() {
@@ -473,7 +482,6 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     return TonePlayer.get().getTimeInMs() + offsetInMs;
   };
   var getBeatsSinceStart = function(offsetInMs, startTimeInMs, beatsPerMinute) {
-    // I think this is returning incorrectly, which is causing getBeat to fail.
     var currentTimeInMs = getServerTime(offsetInMs);
     var timeDiffInMs    = currentTimeInMs - startTimeInMs;
     // how many beats in timeDiffInSeconds:
@@ -506,6 +514,10 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   // We won't record any changes until settings are loaded from the server
   var sendChangesToServer = false;
 
+  $scope.totalOffsetInMs = function() {
+    return $scope.offsetInMs + parseInt($scope.additionalOffsetInMs);
+  };
+
   // Query server for tempo, time sig, and start time via websockets (and set up handlers for when new data comes through)
   $scope.beatsPerMinute         = null;
   $scope.editableBeatsPerMinute = null;
@@ -517,7 +529,8 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   $scope.role                   = null;
   $scope.connections            = null;
   $scope.invitees               = null;
-  $scope.startTimeInMs          = getServerTime($scope.offsetInMs);
+  $scope.additionalOffsetInMs   = 0;
+  $scope.startTimeInMs          = getServerTime($scope.totalOffsetInMs());
   $scope.isNumber               = angular.isNumber;
   var deferred                  = $q.defer();
   var infoWebSocket             = deferred.promise;
@@ -584,7 +597,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   var handleTempoEdit = function() {
     $scope.$apply(function() {
       $scope.beatsPerMinute = Math.round($scope.editableBeatsPerMinute * 10.0) / 10.0;
-      $scope.startTimeInMs  = getServerTime($scope.offsetInMs);
+      $scope.startTimeInMs  = getServerTime($scope.totalOffsetInMs());
       $el.val($scope.beatsPerMinute.toFixed(1));
       $(window).trigger('settings:change');
 
@@ -604,7 +617,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   });
 
   $scope.loadPreset = function(preset) {
-    var serverTimeInMs = getServerTime($scope.offsetInMs);
+    var serverTimeInMs = getServerTime($scope.totalOffsetInMs());
 
     // Don't do anything unless something's different
     var oldHash = {
@@ -736,13 +749,6 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     $(window).trigger('settings:change');
   });
 
-  // Deprecated
-  // $scope.sync = function() {
-  //   $scope.offsetInMs = null;  // Shows loading screen
-  //   var syncResult = TimeSynchronizationFactory.getOffset();
-  //   syncResult.then(function(val) { $scope.offsetInMs = val; });
-  // };
-
   var recentTaps = [];
   var setTempo = function() {
     $scope.$apply(function() {
@@ -784,7 +790,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
   if (Modernizr.touch) eventType = 'touchstart';
   var button = $('#tap-button');
   button.on(eventType, function() {
-    var serverTimeInMs = getServerTime($scope.offsetInMs);
+    var serverTimeInMs = getServerTime($scope.totalOffsetInMs());
     recentTaps.push(serverTimeInMs);
 
     // If this is the first tap of the measure, recent start time
@@ -835,7 +841,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
     // Figure out which beats will happen in the next 500ms
     var beats           = [];
     var currentTime     = TonePlayer.get().getTimeInMs();
-    var startTimeInMs   = $scope.startTimeInMs - $scope.offsetInMs;
+    var startTimeInMs   = $scope.startTimeInMs - $scope.totalOffsetInMs();
     var lookaheadTime   = currentTime + AUDIO_LOOKAHEAD_INTERVAL;
     var tickInterval    = 60 * 1000.0 / $scope.beatsPerMinute;
     var beatsPerMeasure = $scope.beatsPerMeasure;
@@ -872,7 +878,7 @@ app.controller('ShowController', function($scope, $q, TimeSynchronizationFactory
 
     // Update visual interface
     var newBeat = getBeat(
-      $scope.offsetInMs,
+      $scope.totalOffsetInMs(),
       $scope.startTimeInMs,
       $scope.beatsPerMinute,
       $scope.beatsPerMeasure
